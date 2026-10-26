@@ -391,3 +391,54 @@ test('BlackjackEngine validation errors and edge cases', () => {
   // Invalid player action
   assert.throws(() => engine.playerAction('p1', 'surrender'), /คำสั่งไม่ถูกต้อง/);
 });
+
+test('BlackjackEngine auto dealer draw loop does not hang when deck is exhausted', () => {
+  const rm = new RoomManager();
+  const room = rm.createRoom({ hostName: 'Host', playerId: 'p1', socketId: 's1', initialChips: 500 });
+  const engine = new BlackjackEngine(room, rm);
+
+  engine.startBetting();
+  engine.placeBet('p1', 100);
+
+  // Short custom deck with exactly 4 cards:
+  // p1: 10♠, 8♥ (18)
+  // dealer: 6♣, 7♦ (13 < 17, dealer needs to hit, but 0 cards remain in deck)
+  engine.dealRound([
+    { rank: '10', suit: '♠' },
+    { rank: '6', suit: '♣' },
+    { rank: '8', suit: '♥' },
+    { rank: '7', suit: '♦' }
+  ]);
+
+  assert.equal(room.gameState.phase, 'PLAYER_TURN');
+  // p1 stands, triggers auto dealer turn
+  engine.playerAction('p1', 'stand');
+
+  assert.equal(room.gameState.phase, 'SETTLED');
+  assert.equal(room.gameState.dealerHand.total, 13);
+  assert.equal(room.gameState.dealerHand.cards.length, 2);
+  // Player 18 beats dealer 13
+  assert.equal(room.players['p1'].chips, 500 + 100);
+});
+
+test('BlackjackEngine auto dealer draw loop in dealRound does not hang with natural blackjack and exhausted deck', () => {
+  const rm = new RoomManager();
+  const room = rm.createRoom({ hostName: 'Host', playerId: 'p1', socketId: 's1', initialChips: 500 });
+  const engine = new BlackjackEngine(room, rm);
+
+  engine.startBetting();
+  engine.placeBet('p1', 100);
+
+  // p1 gets A♠, K♠ (BJ), dealer gets 5♣, 8♦ (13 < 17, 0 cards remain)
+  engine.dealRound([
+    { rank: 'A', suit: '♠' },
+    { rank: '5', suit: '♣' },
+    { rank: 'K', suit: '♠' },
+    { rank: '8', suit: '♦' }
+  ]);
+
+  assert.equal(room.gameState.phase, 'SETTLED');
+  assert.equal(room.gameState.dealerHand.total, 13);
+  assert.equal(room.gameState.dealerHand.cards.length, 2);
+  assert.equal(room.players['p1'].chips, 500 + 150);
+});

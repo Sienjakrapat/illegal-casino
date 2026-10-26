@@ -221,17 +221,7 @@ class BlackjackEngine {
       }
 
       if (this.room.dealer.mode === 'auto') {
-        while (this.room.gameState.dealerHand.total < 17) {
-          const card = this.room.gameState.deck.shift();
-          this.room.gameState.dealerHand.cards.push(card);
-          const ev = evaluateBlackjackHand(this.room.gameState.dealerHand.cards);
-          this.room.gameState.dealerHand.total = ev.total;
-          this.room.gameState.dealerHand.isBlackjack = ev.isBlackjack;
-          this.room.gameState.dealerHand.isBust = ev.isBust;
-          this.room.gameState.dealerHand.isSoft = ev.isSoft;
-          this.room.gameState.dealerHand.label = ev.label;
-        }
-        this.settleRound();
+        this._autoPlayDealer();
       } else {
         this.room.gameState.phase = 'DEALER_TURN';
       }
@@ -331,22 +321,32 @@ class BlackjackEngine {
         }
 
         if (this.room.dealer.mode === 'auto') {
-          while (this.room.gameState.dealerHand.total < 17) {
-            const card = this.room.gameState.deck.shift();
-            this.room.gameState.dealerHand.cards.push(card);
-            const ev = evaluateBlackjackHand(this.room.gameState.dealerHand.cards);
-            this.room.gameState.dealerHand.total = ev.total;
-            this.room.gameState.dealerHand.isBlackjack = ev.isBlackjack;
-            this.room.gameState.dealerHand.isBust = ev.isBust;
-            this.room.gameState.dealerHand.isSoft = ev.isSoft;
-            this.room.gameState.dealerHand.label = ev.label;
-          }
-          this.settleRound();
+          this._autoPlayDealer();
         }
       }
     }
 
     return this.room.gameState;
+  }
+
+  /**
+   * Automatically draws cards for dealer in auto mode until total >= 17 or deck exhausted.
+   * @private
+   */
+  _autoPlayDealer() {
+    while (this.room.gameState.dealerHand.total < 17) {
+      if (!this.room.gameState.deck || this.room.gameState.deck.length === 0) break;
+      const card = this.room.gameState.deck.shift();
+      if (!card) break;
+      this.room.gameState.dealerHand.cards.push(card);
+      const ev = evaluateBlackjackHand(this.room.gameState.dealerHand.cards);
+      this.room.gameState.dealerHand.total = ev.total;
+      this.room.gameState.dealerHand.isBlackjack = ev.isBlackjack;
+      this.room.gameState.dealerHand.isBust = ev.isBust;
+      this.room.gameState.dealerHand.isSoft = ev.isSoft;
+      this.room.gameState.dealerHand.label = ev.label;
+    }
+    this.settleRound();
   }
 
   /**
@@ -369,7 +369,15 @@ class BlackjackEngine {
     }
 
     if (action === 'hit') {
+      if (!this.room.gameState.deck || this.room.gameState.deck.length === 0) {
+        this.settleRound();
+        return this.room.gameState;
+      }
       const card = this.room.gameState.deck.shift();
+      if (!card) {
+        this.settleRound();
+        return this.room.gameState;
+      }
       this.room.gameState.dealerHand.cards.push(card);
       const ev = evaluateBlackjackHand(this.room.gameState.dealerHand.cards);
       this.room.gameState.dealerHand.total = ev.total;
