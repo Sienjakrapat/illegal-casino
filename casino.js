@@ -1045,8 +1045,12 @@
       const modalBalanceEl = document.getElementById('chip-modal-balance');
       const modalDraftEl = document.getElementById('chip-modal-draft-amount');
       const modalConfirmBtn = document.getElementById('btn-modal-confirm-bet');
+      const modalInputCustom = document.getElementById('input-chip-modal-custom');
       if (modalBalanceEl) modalBalanceEl.textContent = formatChips(you.chips);
       if (modalDraftEl) modalDraftEl.textContent = formatChips(clientState.draftBet);
+      if (modalInputCustom && document.activeElement !== modalInputCustom) {
+        modalInputCustom.value = clientState.draftBet;
+      }
       if (modalConfirmBtn) {
         modalConfirmBtn.textContent = `✅ ยืนยันเดิมพัน (${formatChips(clientState.draftBet)})`;
       }
@@ -1114,6 +1118,11 @@
       });
 
       document.getElementById('btn-open-chip-modal')?.addEventListener('click', () => {
+        const inputCustom = document.getElementById('input-chip-modal-custom');
+        if (inputCustom) {
+          inputCustom.value = clientState.draftBet;
+          setTimeout(() => inputCustom.focus(), 80);
+        }
         document.getElementById('chip-picker-modal')?.classList.remove('hidden');
       });
 
@@ -1432,6 +1441,62 @@
     });
 
     // Chip Picker Modal events
+    const inputChipCustom = document.getElementById('input-chip-modal-custom');
+    if (inputChipCustom) {
+      inputChipCustom.addEventListener('input', () => {
+        const state = clientState.roomState;
+        const you = state?.you || state?.players?.[clientState.playerId];
+        const maxChips = you?.chips || 0;
+        let val = parseInt(inputChipCustom.value, 10);
+        if (isNaN(val) || val < 0) val = 0;
+        if (val > maxChips) val = maxChips;
+        clientState.draftBet = val;
+
+        const modalDraftEl = document.getElementById('chip-modal-draft-amount');
+        if (modalDraftEl) modalDraftEl.textContent = formatChips(val);
+        const modalConfirmBtn = document.getElementById('btn-modal-confirm-bet');
+        if (modalConfirmBtn) modalConfirmBtn.textContent = `✅ ยืนยันเดิมพัน (${formatChips(val)})`;
+        const btnOpenModal = document.getElementById('btn-open-chip-modal');
+        if (btnOpenModal) btnOpenModal.textContent = `🪙 หน้าต่างเลือกชิป (${formatChips(val)})`;
+        const btnConfirmBet = document.getElementById('btn-confirm-bet');
+        if (btnConfirmBet) btnConfirmBet.textContent = `🪙 ยืนยันเดิมพัน (${formatChips(val)})`;
+      });
+
+      inputChipCustom.addEventListener('change', () => {
+        const state = clientState.roomState;
+        const you = state?.you || state?.players?.[clientState.playerId];
+        const maxChips = you?.chips || 0;
+        let val = parseInt(inputChipCustom.value, 10);
+        if (isNaN(val) || val < 0) val = 0;
+        if (val > maxChips) {
+          val = maxChips;
+          showToast(`คุณมีชิปสูงสุด ${formatChips(maxChips)} ชิป`);
+        }
+        clientState.draftBet = val;
+        inputChipCustom.value = val;
+        renderOwnHandAndActions(clientState.roomState);
+      });
+    }
+
+    document.getElementById('btn-chip-modal-input-clear')?.addEventListener('click', () => {
+      clientState.draftBet = 0;
+      if (inputChipCustom) inputChipCustom.value = 0;
+      renderOwnHandAndActions(clientState.roomState);
+    });
+
+    document.querySelectorAll('[data-modal-pct]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const state = clientState.roomState;
+        const you = state?.you || state?.players?.[clientState.playerId];
+        if (!you) return;
+        const pct = parseFloat(btn.dataset.modalPct) || 0;
+        clientState.draftBet = Math.max(0, Math.min(you.chips, Math.floor(you.chips * pct)));
+        if (inputChipCustom) inputChipCustom.value = clientState.draftBet;
+        sfx.playChipBet();
+        renderOwnHandAndActions(state);
+      });
+    });
+
     document.querySelectorAll('[data-modal-add-chip]').forEach(btn => {
       btn.addEventListener('click', () => {
         const state = clientState.roomState;
@@ -1439,6 +1504,7 @@
         if (!you) return;
         const add = Number(btn.dataset.modalAddChip) || 0;
         clientState.draftBet = Math.min(you.chips, clientState.draftBet + add);
+        if (inputChipCustom) inputChipCustom.value = clientState.draftBet;
         sfx.playChipBet();
         renderOwnHandAndActions(state);
       });
@@ -1449,6 +1515,7 @@
       const you = state?.you || state?.players?.[clientState.playerId];
       if (!you) return;
       clientState.draftBet = you.chips;
+      if (inputChipCustom) inputChipCustom.value = clientState.draftBet;
       sfx.playChipBet();
       renderOwnHandAndActions(state);
     });
@@ -1457,6 +1524,7 @@
       const state = clientState.roomState;
       if (!state) return;
       clientState.draftBet = 0;
+      if (inputChipCustom) inputChipCustom.value = 0;
       renderOwnHandAndActions(state);
     });
 

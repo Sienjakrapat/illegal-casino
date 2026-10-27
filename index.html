@@ -198,8 +198,21 @@
       <div class="modal-body text-center">
         <div class="chip-picker-summary">
           <div class="chip-picker-balance">ชิปของคุณ: <strong id="chip-modal-balance">0</strong></div>
-          <div class="chip-picker-total-label">เงินเดิมพันตานี้</div>
-          <div id="chip-modal-draft-amount" class="chip-picker-total-value">0</div>
+          <label for="input-chip-modal-custom" class="chip-picker-total-label">กำหนดตัวเลขชิปเดิมพัน (พิมพ์ตัวเลขได้)</label>
+          <div class="chip-picker-input-wrap">
+            <span class="chip-picker-input-prefix">🪙</span>
+            <input type="number" id="input-chip-modal-custom" class="chip-picker-custom-input" min="0" step="10" placeholder="0" inputmode="numeric" pattern="[0-9]*" value="0">
+            <button type="button" id="btn-chip-modal-input-clear" class="chip-picker-input-clear" title="ล้างค่า" aria-label="ล้างค่า">✕</button>
+          </div>
+          <div class="chip-picker-formatted-preview">
+            เดิมพัน: <strong id="chip-modal-draft-amount" class="chip-picker-highlight-val">0</strong> ชิป
+          </div>
+          <div class="chip-quick-shortcuts">
+            <button type="button" class="chip-shortcut-btn" data-modal-pct="0.25">1/4</button>
+            <button type="button" class="chip-shortcut-btn" data-modal-pct="0.5">1/2</button>
+            <button type="button" class="chip-shortcut-btn" data-modal-pct="0.75">3/4</button>
+            <button type="button" class="chip-shortcut-btn" data-modal-pct="1">MAX</button>
+          </div>
         </div>
 
         <div class="round-chips-grid">

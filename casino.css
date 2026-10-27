@@ -1508,9 +1508,122 @@ p, .modal-desc, .table-status-banner {
 }
 
 .chip-picker-total-label {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   color: #fda4af;
   font-weight: 600;
+  margin-top: 0.2rem;
+  display: block;
+}
+
+.chip-picker-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(18, 6, 9, 0.95);
+  border: 1.5px solid var(--border-crimson);
+  border-radius: 14px;
+  padding: 0.2rem 0.6rem;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chip-picker-input-wrap:focus-within {
+  border-color: var(--neon-gold-bright);
+  box-shadow: 0 0 14px rgba(253, 230, 138, 0.35), inset 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.chip-picker-input-prefix {
+  font-size: 1.25rem;
+  margin-right: 0.35rem;
+  user-select: none;
+}
+
+.chip-picker-custom-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-num);
+  font-size: 2rem;
+  font-weight: 900;
+  color: #ffffff;
+  text-align: center;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+  padding: 0.2rem 0;
+  -moz-appearance: textfield;
+}
+
+.chip-picker-custom-input::-webkit-outer-spin-button,
+.chip-picker-custom-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.chip-picker-input-clear {
+  background: rgba(225, 29, 72, 0.2);
+  border: 1px solid var(--border-crimson);
+  color: #fda4af;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  margin-left: 0.35rem;
+}
+
+.chip-picker-input-clear:hover,
+.chip-picker-input-clear:active {
+  background: var(--crimson-royal);
+  color: #ffffff;
+}
+
+.chip-picker-formatted-preview {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
+.chip-picker-highlight-val {
+  color: var(--neon-gold-bright);
+  font-family: var(--font-num);
+  font-weight: 700;
+}
+
+.chip-quick-shortcuts {
+  display: flex;
+  gap: 0.35rem;
+  justify-content: center;
+  margin-top: 0.35rem;
+}
+
+.chip-shortcut-btn {
+  flex: 1;
+  background: rgba(225, 29, 72, 0.14);
+  border: 1px solid var(--border-crimson);
+  color: var(--neon-gold-soft);
+  font-family: var(--font-num);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.3rem 0.4rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chip-shortcut-btn:hover,
+.chip-shortcut-btn:active {
+  background: var(--crimson-royal);
+  color: #ffffff;
+  border-color: var(--neon-gold-soft);
+  box-shadow: 0 0 8px rgba(225, 29, 72, 0.5);
+  transform: translateY(-1px);
 }
 
 .chip-picker-total-value {
