@@ -7,6 +7,7 @@ const { PokDengEngine } = require('./src/games/pokdeng');
 const { BlackjackEngine } = require('./src/games/blackjack');
 const { PokerEngine } = require('./src/games/poker');
 const { RealCardsEngine } = require('./src/games/realcards');
+const { IrishPokerEngine } = require('./src/games/irishpoker');
 
 function normalizeArgs(payload, callback) {
   if (typeof payload === 'function') {
@@ -74,6 +75,8 @@ function createCasinoServer() {
       engine = new PokerEngine(room, roomManager);
     } else if (activeGame === 'realcards') {
       engine = new RealCardsEngine(room, roomManager);
+    } else if (activeGame === 'irishpoker') {
+      engine = new IrishPokerEngine(room, roomManager);
     } else {
       throw new Error(`ไม่รองรับเกม: ${activeGame}`);
     }
@@ -223,7 +226,7 @@ function createCasinoServer() {
           if (!player.isAdmin) {
             throw new Error('เฉพาะ Admin เท่านั้นที่สามารถสลับเกมใน Admin Panel ได้');
           }
-          if (!['pokdeng', 'blackjack', 'poker', 'realcards'].includes(activeGame)) {
+          if (!['pokdeng', 'blackjack', 'poker', 'realcards', 'irishpoker'].includes(activeGame)) {
             throw new Error(`ไม่รองรับเกม: ${activeGame}`);
           }
           if (isRoundActivelyInProgress(room, true)) {
@@ -261,7 +264,7 @@ function createCasinoServer() {
         const engine = getOrCreateEngine(roomCode);
         const game = room.settings?.activeGame || 'pokdeng';
 
-        if (game === 'pokdeng' || game === 'blackjack') {
+        if (game === 'pokdeng' || game === 'blackjack' || game === 'irishpoker') {
           engine.startBetting();
         } else if (game === 'realcards') {
           engine.startBetting(subGame);
@@ -331,12 +334,22 @@ function createCasinoServer() {
         const engine = getOrCreateEngine(roomCode);
         const game = room.settings?.activeGame || 'pokdeng';
 
-        if (action === 'deal' && (game === 'pokdeng' || game === 'blackjack' || game === 'realcards')) {
+        if (action === 'deal' && (game === 'pokdeng' || game === 'blackjack' || game === 'realcards' || game === 'irishpoker')) {
           if (room.dealer?.mode === 'player' && room.dealer?.playerId !== playerId) {
             throw new Error('เฉพาะเจ้ามือเท่านั้นที่สามารถกดแจกไพ่ได้');
           }
           if (room.gameState?.phase === 'BETTING') {
             engine.dealRound();
+          }
+        } else if (game === 'irishpoker') {
+          if (action === 'forceReveal') {
+            const isDealer = room.dealer?.mode === 'player' && room.dealer?.playerId === playerId;
+            if (!isDealer && !room.players[playerId]?.isAdmin) {
+              throw new Error('เฉพาะเจ้ามือหรือ Admin เท่านั้นที่เปิดไพ่รอบนี้ทันทีได้');
+            }
+            engine.forceReveal();
+          } else {
+            engine.playerAction(playerId, { guess: payload.guess });
           }
         } else if (game === 'realcards') {
           if (action === 'settle') {

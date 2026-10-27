@@ -1632,3 +1632,190 @@ p, .modal-desc, .table-status-banner {
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* ================= CIRCULAR 3D CASINO CHIPS & CHIP PICKER WINDOW ================= */
+.chip-picker-summary {
+  background: rgba(7, 3, 5, 0.85);
+  border: 1px solid var(--border-gold);
+  box-shadow: var(--inner-top-highlight);
+  border-radius: 16px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.chip-picker-balance {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.chip-picker-balance strong {
+  color: var(--neon-gold-bright);
+  font-family: var(--font-num);
+}
+
+.chip-picker-total-label {
+  font-size: 0.76rem;
+  color: #fda4af;
+  font-weight: 600;
+}
+
+.chip-picker-total-value {
+  font-family: var(--font-num);
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.round-chips-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.35rem 0;
+}
+
+.round-chip {
+  width: 60px;
+  height: 60px;
+  aspect-ratio: 1 / 1;
+  flex: 0 0 60px;
+  border-radius: 50%;
+  padding: 0;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background:
+    repeating-conic-gradient(
+      from 0deg,
+      var(--chip-color, #e11d48) 0deg 20deg,
+      #f8fafc 20deg 30deg
+    );
+  box-shadow:
+    inset 0 2px 3px rgba(255, 255, 255, 0.45),
+    0 4px 0 var(--chip-edge, #881337),
+    0 7px 14px rgba(0, 0, 0, 0.75);
+  transition: transform 150ms var(--ease-out), box-shadow 150ms var(--ease-out), filter 150ms var(--ease-out);
+  font-variant-numeric: tabular-nums;
+}
+
+.round-chip-inner {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--chip-core-light, #be123c), var(--chip-core-dark, #4c0519));
+  border: 1.5px dashed rgba(255, 255, 255, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-num);
+  font-weight: 900;
+  font-size: 0.78rem;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+.round-chip:active:not(:disabled) {
+  transform: translateY(3px) scale(0.95);
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.4),
+    0 1px 0 var(--chip-edge, #881337),
+    0 3px 6px rgba(0, 0, 0, 0.7);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .round-chip:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+  }
+}
+
+/* Denomination Color Variants (Red-Black Casino Palette) */
+.round-chip.chip-denom-10 {
+  --chip-color: #334155;
+  --chip-edge: #0f172a;
+  --chip-core-light: #475569;
+  --chip-core-dark: #0f172a;
+}
+
+.round-chip.chip-denom-50 {
+  --chip-color: #be123c;
+  --chip-edge: #4c0519;
+  --chip-core-light: #e11d48;
+  --chip-core-dark: #881337;
+}
+
+.round-chip.chip-denom-100 {
+  --chip-color: #18181b;
+  --chip-edge: #09090b;
+  --chip-core-light: #27272a;
+  --chip-core-dark: #09090b;
+  background:
+    repeating-conic-gradient(
+      from 0deg,
+      #18181b 0deg 20deg,
+      #f43f5e 20deg 30deg
+    );
+}
+
+.round-chip.chip-denom-500 {
+  --chip-color: #9f1239;
+  --chip-edge: #4c0519;
+  --chip-core-light: #be123c;
+  --chip-core-dark: #3b0712;
+  background:
+    repeating-conic-gradient(
+      from 0deg,
+      #9f1239 0deg 20deg,
+      #fda4af 20deg 30deg
+    );
+}
+
+.round-chip.chip-denom-1000 {
+  --chip-color: #b91c1c;
+  --chip-edge: #450a0a;
+  --chip-core-light: #ef4444;
+  --chip-core-dark: #7f1d1d;
+  background:
+    repeating-conic-gradient(
+      from 0deg,
+      #7f1d1d 0deg 20deg,
+      #fef2f2 20deg 30deg
+    );
+}
+
+.round-chip.chip-denom-allin {
+  --chip-color: #e11d48;
+  --chip-edge: #881337;
+  --chip-core-light: #f43f5e;
+  --chip-core-dark: #9f1239;
+  border-color: #fecdd3;
+}
+
+.round-chip.chip-denom-allin .round-chip-inner {
+  font-size: 0.66rem;
+  font-family: var(--font-thai);
+}
+
+.round-chip.chip-denom-clear {
+  --chip-color: #1e293b;
+  --chip-edge: #090d16;
+  --chip-core-light: #334155;
+  --chip-core-dark: #0f172a;
+  border-color: #94a3b8;
+}
+
+.round-chip.chip-denom-clear .round-chip-inner {
+  font-size: 0.7rem;
+  font-family: var(--font-thai);
+}

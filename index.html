@@ -160,6 +160,57 @@
     </footer>
   </section>
 
+  
+  <!-- ================= CHIP SELECTION MODAL (หน้าต่างเลือกชิป) ================= -->
+  <div id="chip-picker-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="chip-modal-title">
+    <div class="glass-modal modal-sm">
+      <div class="modal-header">
+        <h2 id="chip-modal-title">🪙 หน้าต่างเลือกชิปเดิมพัน</h2>
+        <button type="button" class="modal-close-btn" data-close-modal="chip-picker-modal" aria-label="ปิดหน้าต่าง">✕</button>
+      </div>
+      <div class="modal-body text-center">
+        <div class="chip-picker-summary">
+          <div class="chip-picker-balance">ชิปของคุณ: <strong id="chip-modal-balance">0</strong></div>
+          <div class="chip-picker-total-label">เงินเดิมพันตานี้</div>
+          <div id="chip-modal-draft-amount" class="chip-picker-total-value">0</div>
+        </div>
+
+        <div class="round-chips-grid">
+          <button type="button" class="round-chip chip-denom-10" data-modal-add-chip="10">
+            <span class="round-chip-inner">+10</span>
+          </button>
+          <button type="button" class="round-chip chip-denom-50" data-modal-add-chip="50">
+            <span class="round-chip-inner">+50</span>
+          </button>
+          <button type="button" class="round-chip chip-denom-100" data-modal-add-chip="100">
+            <span class="round-chip-inner">+100</span>
+          </button>
+          <button type="button" class="round-chip chip-denom-500" data-modal-add-chip="500">
+            <span class="round-chip-inner">+500</span>
+          </button>
+          <button type="button" class="round-chip chip-denom-1000" data-modal-add-chip="1000">
+            <span class="round-chip-inner">+1K</span>
+          </button>
+          <button type="button" class="round-chip chip-denom-allin" id="btn-modal-chip-allin">
+            <span class="round-chip-inner">ALL IN</span>
+          </button>
+          <button type="button" class="round-chip chip-denom-clear" id="btn-modal-chip-clear">
+            <span class="round-chip-inner">ล้าง 0</span>
+          </button>
+        </div>
+
+        <div class="action-btn-row">
+          <button type="button" id="btn-modal-confirm-bet" class="btn-neon btn-gold">
+            ✅ ยืนยันเดิมพัน
+          </button>
+          <button type="button" id="btn-modal-skip-bet" class="btn-neon btn-outline">
+            ⏭️ ไม่ลงเดิมพัน
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= DEALER SELECTION MODAL ================= -->
   <div id="dealer-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="dealer-modal-title">
     <div class="glass-modal">
@@ -262,6 +313,9 @@
             </button>
             <button type="button" class="btn-game-switch" data-game="poker">
               ♠️ โป๊กเกอร์ Texas Hold'em
+            </button>
+            <button type="button" class="btn-game-switch" data-game="irishpoker">
+              ☘️ Irish Poker (ทายไพ่ 4 รอบ)
             </button>
             <button type="button" class="btn-game-switch" data-game="realcards">
               🖐️ โหมดไพ่ของจริง (ใช้ไพ่จริง)
