@@ -161,9 +161,36 @@
   </section>
 
   
+  
+  <!-- ================= TABLE QUICK MENU MODAL / BOTTOM SHEET ================= -->
+  <div id="table-menu-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="table-menu-title">
+    <div class="glass-modal modal-sm">
+      <div class="bottom-sheet-handle" aria-hidden="true"></div>
+      <div class="modal-header">
+        <h2 id="table-menu-title">👑 เมนูโต๊ะ VIP</h2>
+        <button type="button" class="modal-close-btn" data-close-modal="table-menu-modal" aria-label="ปิดหน้าต่าง">✕</button>
+      </div>
+      <div class="modal-body">
+        <button type="button" id="btn-menu-dealer" class="btn-neon btn-outline btn-block">
+          🎩 โหมดเจ้ามือ (Dealer Mode)
+        </button>
+        <button type="button" id="btn-menu-share" class="btn-neon btn-outline btn-block">
+          📲 ชวนเพื่อนเข้าโต๊ะ / QR Code
+        </button>
+        <button type="button" id="btn-menu-sound" class="btn-neon btn-outline btn-block">
+          🔊 เปิด/ปิดเสียงเอฟเฟกต์
+        </button>
+        <button type="button" id="btn-menu-admin" class="btn-neon btn-gold btn-block hidden">
+          ⚙️ Admin Panel (เจ้าของห้อง)
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= CHIP SELECTION MODAL (หน้าต่างเลือกชิป) ================= -->
   <div id="chip-picker-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="chip-modal-title">
     <div class="glass-modal modal-sm">
+      <div class="bottom-sheet-handle" aria-hidden="true"></div>
       <div class="modal-header">
         <h2 id="chip-modal-title">🪙 หน้าต่างเลือกชิปเดิมพัน</h2>
         <button type="button" class="modal-close-btn" data-close-modal="chip-picker-modal" aria-label="ปิดหน้าต่าง">✕</button>
@@ -214,6 +241,7 @@
   <!-- ================= DEALER SELECTION MODAL ================= -->
   <div id="dealer-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="dealer-modal-title">
     <div class="glass-modal">
+      <div class="bottom-sheet-handle" aria-hidden="true"></div>
       <div class="modal-header">
         <h2 id="dealer-modal-title">🎩 เป็นเจ้ามือ (Dealer Mode)</h2>
         <button type="button" class="modal-close-btn" data-close-modal="dealer-modal" aria-label="ปิดหน้าต่าง">✕</button>
@@ -247,6 +275,7 @@
   <!-- ================= QR / SHARE ROOM MODAL ================= -->
   <div id="share-room-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="share-modal-title">
     <div class="glass-modal modal-sm">
+      <div class="bottom-sheet-handle" aria-hidden="true"></div>
       <div class="modal-header">
         <h2 id="share-modal-title">📲 ชวนเพื่อนเข้าโต๊ะ</h2>
         <button type="button" class="modal-close-btn" data-close-modal="share-room-modal" aria-label="ปิดหน้าต่าง">✕</button>
@@ -272,6 +301,7 @@
   <!-- ================= ADMIN PANEL MODAL ================= -->
   <div id="admin-panel-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
     <div class="glass-modal modal-lg">
+      <div class="bottom-sheet-handle" aria-hidden="true"></div>
       <div class="modal-header">
         <h2 id="admin-modal-title">⚙️ Admin Panel — ควบคุมโต๊ะคาสิโนเถื่อน</h2>
         <button type="button" class="modal-close-btn" data-close-modal="admin-panel-modal" aria-label="ปิดหน้าต่าง">✕</button>

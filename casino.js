@@ -1493,6 +1493,47 @@
       );
     });
 
+    
+    // Table Menu Modal (Bottom Sheet on Mobile)
+    const btnTableMenu = document.getElementById('btn-table-menu');
+    const tableMenuModal = document.getElementById('table-menu-modal');
+    const btnMenuDealer = document.getElementById('btn-menu-dealer');
+    const btnMenuShare = document.getElementById('btn-menu-share');
+    const btnMenuSound = document.getElementById('btn-menu-sound');
+    const btnMenuAdmin = document.getElementById('btn-menu-admin');
+
+    if (btnTableMenu && tableMenuModal) {
+      btnTableMenu.addEventListener('click', () => {
+        const you = clientState.roomState?.you || clientState.roomState?.players?.[clientState.playerId];
+        if (btnMenuAdmin) {
+          btnMenuAdmin.classList.toggle('hidden', !you?.isAdmin);
+        }
+        tableMenuModal.classList.remove('hidden');
+      });
+
+      btnMenuDealer?.addEventListener('click', () => {
+        tableMenuModal.classList.add('hidden');
+        el.dealerModal.classList.remove('hidden');
+      });
+
+      btnMenuShare?.addEventListener('click', () => {
+        tableMenuModal.classList.add('hidden');
+        el.btnShareRoom.click();
+      });
+
+      btnMenuSound?.addEventListener('click', () => {
+        el.btnSoundToggle.click();
+        if (btnMenuSound) {
+          btnMenuSound.textContent = sfx.enabled ? '🔊 เปิดเสียงเอฟเฟกต์ (เปิดอยู่)' : '🔇 ปิดเสียงเอฟเฟกต์ (ปิดอยู่)';
+        }
+      });
+
+      btnMenuAdmin?.addEventListener('click', () => {
+        tableMenuModal.classList.add('hidden');
+        el.btnOpenAdmin.click();
+      });
+    }
+
     el.btnDealerModal.addEventListener('click', () => {
       el.dealerModal.classList.remove('hidden');
     });
