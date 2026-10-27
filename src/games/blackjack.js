@@ -125,6 +125,25 @@ class BlackjackEngine {
   }
 
   /**
+   * Skips betting for this round (player sits out this hand).
+   * @param {string} playerId
+   */
+  skipBet(playerId) {
+    if (!this.room.gameState || this.room.gameState.phase !== 'BETTING') {
+      throw new Error('ไม่อยู่ในรอบวางเดิมพัน');
+    }
+    const player = this.room.players[playerId];
+    if (!player) {
+      throw new Error('ไม่พบผู้เล่น');
+    }
+    if (this.room.dealer.mode === 'player' && this.room.dealer.playerId === playerId) {
+      throw new Error('เจ้ามือไม่ต้องวางเดิมพัน');
+    }
+    this.room.gameState.bets[playerId] = 0;
+    return 0;
+  }
+
+  /**
    * Deals 2 cards alternating to active players then dealer.
    * @param {Array} [customDeck=null]
    */

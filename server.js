@@ -240,16 +240,45 @@ function createCasinoServer() {
     socket.on('game:placeBet', (rawPayload, rawCb) => {
       const [payload, callback] = normalizeArgs(rawPayload, rawCb);
       try {
-        const { roomCode, playerId, amount } = payload;
+        const { roomCode, playerId, amount, skip } = payload;
         const room = roomManager.getRoom(roomCode);
         getAuthenticatedPlayer(room, socket.id, playerId);
         const engine = getOrCreateEngine(roomCode);
-        engine.placeBet(playerId, amount);
+
         const isHumanDealer = (pid) => room.dealer?.mode === 'player' && room.dealer?.playerId === pid;
         const eligiblePids = (room.playerOrder || Object.keys(room.players || {})).filter(pid => {
           const p = room.players[pid];
           return p && p.chips > 0 && p.connected !== false && !isHumanDealer(pid);
         });
+
+        if (skip || Number(amount) === 0) {
+          const othersAllSkipped = eligiblePids.length > 0 && eligiblePids.every(
+            pid => pid === playerId || room.gameState?.bets?.[pid] === 0
+          );
+          if (othersAllSkipped) {
+            throw new Error('ต้องมีผู้เล่นลงเดิมพันอย่างน้อย 1 คนในตานี้');
+          }
+          engine.skipBet(playerId);
+        } else {
+          engine.placeBet(playerId, amount);
+        }
+
+        const allConfirmed = eligiblePids.length > 0 && eligiblePids.every(
+          pid => typeof room.gameState?.bets?.[pid] === 'number'
+        );
+        const hasAtLeastOneBettor = eligiblePids.some(
+          pid => (room.gameState?.bets?.[pid] || 0) > 0
+        );
+        if (allConfirmed && hasAtLeastOneBettor && room.gameState?.phase === 'BETTING') {
+          engine.dealRound();
+        }
+
+        broadcastRoomState(roomCode);
+        callback?.({ ok: true });
+      } catch (err) {
+        callback?.({ ok: false, error: err.message });
+      }
+    });
         const allBetPlaced = eligiblePids.length > 0 && eligiblePids.every(pid => (room.gameState?.bets?.[pid] || 0) > 0);
         if (allBetPlaced && room.gameState?.phase === 'BETTING') {
           engine.dealRound();
