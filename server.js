@@ -245,6 +245,15 @@ function createCasinoServer() {
         getAuthenticatedPlayer(room, socket.id, playerId);
         const engine = getOrCreateEngine(roomCode);
         engine.placeBet(playerId, amount);
+        const isHumanDealer = (pid) => room.dealer?.mode === 'player' && room.dealer?.playerId === pid;
+        const eligiblePids = (room.playerOrder || Object.keys(room.players || {})).filter(pid => {
+          const p = room.players[pid];
+          return p && p.chips > 0 && p.connected !== false && !isHumanDealer(pid);
+        });
+        const allBetPlaced = eligiblePids.length > 0 && eligiblePids.every(pid => (room.gameState?.bets?.[pid] || 0) > 0);
+        if (allBetPlaced && room.gameState?.phase === 'BETTING') {
+          engine.dealRound();
+        }
         broadcastRoomState(roomCode);
         callback?.({ ok: true });
       } catch (err) {
@@ -266,7 +275,9 @@ function createCasinoServer() {
           if (room.dealer?.mode === 'player' && room.dealer?.playerId !== playerId) {
             throw new Error('เฉพาะเจ้ามือเท่านั้นที่สามารถกดแจกไพ่ได้');
           }
-          engine.dealRound();
+          if (room.gameState?.phase === 'BETTING') {
+            engine.dealRound();
+          }
         } else if (game === 'pokdeng' || game === 'blackjack') {
           if (
             room.gameState?.phase === 'DEALER_TURN' &&

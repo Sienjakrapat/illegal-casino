@@ -502,13 +502,13 @@
     const gs = state.gameState;
 
     if (!gs) {
-      el.tableStatusBanner.textContent = '✨ รอเริ่มตาใหม่ — กด "เริ่มตาใหม่" หรือตั้งค่าเจ้ามือได้เลย!';
+      el.tableStatusBanner.textContent = '✨ รอเริ่มตาใหม่ — กด "เริ่มตาใหม่" หรือกด "เป็นเจ้ามือ" ได้เลย!';
       return;
     }
 
     if (activeGame === 'pokdeng') {
       const map = {
-        BETTING: '🪙 รอบวางเดิมพัน — เลือกชิปแล้วยืนยันเดิมพัน ก่อนกดแจกไพ่',
+        BETTING: '🪙 รอบวางเดิมพัน — เมื่อทุกคนกดยืนยันเดิมพันครบ ระบบจะแจกไพ่อัตโนมัติ!',
         PLAYER_TURN: '🎴 รอบผู้เล่นตัดสินใจ — เลือก "จั่วไพ่" หรือ "อยู่"',
         DEALER_TURN: '👑 รอบเจ้ามือตัดสินใจ — เจ้ามือเลือก "จั่วไพ่" หรือ "อยู่"',
         SETTLED: '🏁 สรุปผลตานี้เรียบร้อย!'
@@ -714,7 +714,7 @@
           </button>
           ${activeGame !== 'poker' ? `
             <button type="button" id="btn-dock-dealer" class="btn-neon btn-outline">
-              🎩 ตั้งค่าเจ้ามือ
+              🎩 เป็นเจ้ามือ
             </button>
           ` : ''}
         </div>
@@ -735,20 +735,79 @@
         clientState.draftBet = you.chips;
       }
 
+      const isHumanDealerPid = (pid) => state.dealer?.mode === 'player' && state.dealer?.playerId === pid;
+      const eligiblePids = (state.playerOrder || Object.keys(state.players || {})).filter(pid => {
+        const p = state.players?.[pid];
+        return p && p.chips > 0 && p.connected !== false && !isHumanDealerPid(pid);
+      });
+      const confirmedCount = eligiblePids.filter(pid => (gs.bets?.[pid] || 0) > 0).length;
+      const totalEligible = eligiblePids.length;
+
       if (isHumanDealer) {
-        const betCount = Object.keys(gs.bets || {}).length;
         el.actionControlsDock.innerHTML = `
-          <div class="action-btn-row">
-            <button type="button" id="btn-deal-cards" class="btn-neon btn-gold btn-block">
-              🃏 แจกไพ่เริ่มตา (ผู้เล่นลงเดิมพันแล้ว ${betCount} คน)
-            </button>
+          <div class="text-center" style="color:var(--neon-gold-bright);font-size:0.92rem;padding:0.45rem 0;">
+            ⏳ รอผู้เล่นยืนยันเดิมพันให้ครบ (${confirmedCount}/${totalEligible} คน) — ครบแล้วแจกไพ่อัตโนมัติ!
           </div>
         `;
-        document.getElementById('btn-deal-cards')?.addEventListener('click', () => {
-          emitGameAction('deal');
-        });
         return;
       }
+
+      el.actionControlsDock.innerHTML = `
+        <div class="chip-bet-bar">
+          <button type="button" class="chip-btn" data-add-chip="50">+50</button>
+          <button type="button" class="chip-btn" data-add-chip="100">+100</button>
+          <button type="button" class="chip-btn" data-add-chip="500">+500</button>
+          <button type="button" class="chip-btn chip-allin" id="btn-chip-allin">เทหน้าตัก All-in</button>
+          <button type="button" class="chip-btn chip-clear" id="btn-chip-clear">ล้าง</button>
+        </div>
+        <div class="action-btn-row">
+          <button type="button" id="btn-confirm-bet" class="btn-neon ${currentPlacedBet > 0 ? 'btn-emerald' : 'btn-primary'} btn-block">
+            ${currentPlacedBet > 0
+              ? `✅ ยืนยันแล้ว (${formatChips(currentPlacedBet)}) — รอเพื่อน (${confirmedCount}/${totalEligible} คน)`
+              : `🪙 ยืนยันเดิมพัน (${formatChips(clientState.draftBet)}) — (${confirmedCount}/${totalEligible} คน)`}
+          </button>
+        </div>
+      `;
+
+      el.actionControlsDock.querySelectorAll('[data-add-chip]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const add = Number(btn.dataset.addChip) || 0;
+          clientState.draftBet = Math.min(you.chips, clientState.draftBet + add);
+          sfx.playChipBet();
+          renderOwnHandAndActions(clientState.roomState);
+        });
+      });
+
+      document.getElementById('btn-chip-allin')?.addEventListener('click', () => {
+        clientState.draftBet = you.chips;
+        sfx.playChipBet();
+        renderOwnHandAndActions(clientState.roomState);
+      });
+
+      document.getElementById('btn-chip-clear')?.addEventListener('click', () => {
+        clientState.draftBet = Math.min(50, you.chips);
+        renderOwnHandAndActions(clientState.roomState);
+      });
+
+      document.getElementById('btn-confirm-bet')?.addEventListener('click', () => {
+        if (clientState.draftBet <= 0) {
+          showToast('กรุณาเลือกชิปเดิมพัน', true);
+          return;
+        }
+        socket.emit(
+          'game:placeBet',
+          { roomCode: clientState.roomCode, playerId: myId, amount: clientState.draftBet },
+          res => {
+            if (!res?.ok) showToast(res?.error || 'วางเดิมพันไม่สำเร็จ', true);
+            else {
+              sfx.playChipBet();
+              showToast(`ยืนยันเดิมพัน ${formatChips(clientState.draftBet)} ชิปแล้ว!`);
+            }
+          }
+        );
+      });
+      return;
+    }
 
       const isPlayerDealerMode = state.dealer?.mode === 'player';
       const canDealInAuto = !isPlayerDealerMode && (currentPlacedBet > 0 || you.isAdmin);
