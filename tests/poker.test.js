@@ -393,34 +393,40 @@ test('PokerEngine splits odd pot with remainder going to earliest seat in player
   const room4 = rm4.createRoom({ hostName: 'P1', playerId: 'p1', socketId: 's1', initialChips: 500 });
   rm4.joinRoom({ roomCode: room4.code, playerName: 'P2', playerId: 'p2', socketId: 's2' });
   rm4.joinRoom({ roomCode: room4.code, playerName: 'P3', playerId: 'p3', socketId: 's3' });
-  const deck3 = [
+  rm4.joinRoom({ roomCode: room4.code, playerName: 'P4', playerId: 'p4', socketId: 's4' });
+  const deck4 = [
     { rank: '2', suit: '♦' }, { rank: '3', suit: '♦' }, // P1
     { rank: '2', suit: '♣' }, { rank: '3', suit: '♣' }, // P2
     { rank: '2', suit: '♥' }, { rank: '3', suit: '♥' }, // P3
+    { rank: '4', suit: '♠' }, { rank: '5', suit: '♠' }, // P4
     { rank: 'A', suit: '♠' }, { rank: 'K', suit: '♠' }, { rank: 'Q', suit: '♠' }, // Flop
     { rank: 'J', suit: '♠' }, // Turn
     { rank: '10', suit: '♠' } // River
   ];
   const engine4 = new PokerEngine(room4, rm4);
-  engine4.startHand(deck3);
+  engine4.startHand(deck4);
 
-  // Pre-flop: p1 calls 20, p2 calls 20 (adds 10), p3 checks
+  // Pre-flop: dealer is P1. SB is P2 (10), BB is P3 (20).
+  // First to act is P4 (UTG): calls 20
+  engine4.playerAction('p4', { action: 'call' });
+  // P1 calls 20
   engine4.playerAction('p1', { action: 'call' });
+  // P2 calls 20 (adds 10)
   engine4.playerAction('p2', { action: 'call' });
+  // P3 checks
   engine4.playerAction('p3', { action: 'check' });
 
-  // Flop: all check
+  // Flop: P4 folds dead chips (20 chips) into pot
+  // Post-flop first to act is P2 (SB)
   engine4.playerAction('p2', { action: 'check' });
   engine4.playerAction('p3', { action: 'check' });
+  engine4.playerAction('p4', { action: 'fold' });
   engine4.playerAction('p1', { action: 'check' });
 
   // Turn: all check
   engine4.playerAction('p2', { action: 'check' });
   engine4.playerAction('p3', { action: 'check' });
   engine4.playerAction('p1', { action: 'check' });
-
-  // Set pot to 65 to verify odd-pot remainder distribution: 65 / 3 = 21 rem 2
-  room4.gameState.pot = 65;
 
   // River: all check -> Showdown
   engine4.playerAction('p2', { action: 'check' });
@@ -429,12 +435,17 @@ test('PokerEngine splits odd pot with remainder going to earliest seat in player
 
   assert.equal(room4.gameState.phase, 'SHOWDOWN');
   assert.equal(room4.gameState.results.winners.length, 3);
-  // P1 is earliest seat in playerOrder -> gets 21 + 1 = 22
-  // P2 is second seat in playerOrder -> gets 21 + 1 = 22
-  // P3 is third seat in playerOrder -> gets 21
-  assert.equal(room4.gameState.results.payouts.p1, 22);
-  assert.equal(room4.gameState.results.payouts.p2, 22);
-  assert.equal(room4.gameState.results.payouts.p3, 21);
+  // Pot is 80 (20*4). 80 / 3 = 26 remainder 2
+  // P1 is earliest seat in playerOrder -> gets 26 + 1 = 27
+  // P2 is second seat in playerOrder -> gets 26 + 1 = 27
+  // P3 is third seat in playerOrder -> gets 26
+  assert.equal(room4.gameState.results.payouts.p1, 27);
+  assert.equal(room4.gameState.results.payouts.p2, 27);
+  assert.equal(room4.gameState.results.payouts.p3, 26);
+  assert.equal(room4.players.p1.chips, 507);
+  assert.equal(room4.players.p2.chips, 507);
+  assert.equal(room4.players.p3.chips, 506);
+  assert.equal(room4.players.p4.chips, 480);
 });
 
 test('PokerEngine error validations: turn order, invalid actions, and illegal check', () => {
@@ -499,4 +510,113 @@ test('getSanitizedRoomState masks opponent poker hole cards until revealed', () 
   const sanitizedForP2 = rm.getSanitizedRoomState(room, 'p2');
   assert.equal(sanitizedForP2.gameState.players.p1.holeCards[0].hidden, true);
   assert.equal(sanitizedForP2.gameState.players.p2.holeCards[0].hidden, undefined);
+});
+
+test('PokerEngine splits side pots on unequal all-in: short stack wins main pot, second best deep stack wins side pot', () => {
+  const rm = new RoomManager();
+  const room = rm.createRoom({ hostName: 'P1', playerId: 'p1', socketId: 's1', initialChips: 200 });
+  rm.joinRoom({ roomCode: room.code, playerName: 'P2', playerId: 'p2', socketId: 's2' });
+  rm.joinRoom({ roomCode: room.code, playerName: 'P3', playerId: 'p3', socketId: 's3' });
+  room.players.p1.chips = 50; // P1 is short stack with 50 chips, P2 and P3 have 200 chips
+
+  // Custom deck:
+  // p1 cards: A♠, A♥ (Pair of Aces) - best hand!
+  // p2 cards: K♠, K♥ (Pair of Kings) - 2nd best hand!
+  // p3 cards: Q♠, Q♥ (Pair of Queens) - 3rd best hand!
+  // Community: 2♦, 3♦, 4♦, 7♣, 9♣
+  const customDeck = [
+    { rank: 'A', suit: '♠' }, { rank: 'A', suit: '♥' }, // p1
+    { rank: 'K', suit: '♠' }, { rank: 'K', suit: '♥' }, // p2
+    { rank: 'Q', suit: '♠' }, { rank: 'Q', suit: '♥' }, // p3
+    { rank: '2', suit: '♦' }, { rank: '3', suit: '♦' }, { rank: '4', suit: '♦' }, // Flop
+    { rank: '7', suit: '♣' }, // Turn
+    { rank: '9', suit: '♣' }  // River
+  ];
+
+  const engine = new PokerEngine(room, rm);
+  engine.startHand(customDeck);
+
+  // Pre-flop: dealer is p1. SB is p2 (posts 10), BB is p3 (posts 20).
+  // First to act is p1 (UTG). P1 has 50 chips.
+  // P1 goes all-in for 50 chips:
+  engine.playerAction('p1', { action: 'allin' });
+  assert.equal(room.gameState.players.p1.allIn, true);
+  assert.equal(room.gameState.players.p1.totalBet, 50);
+
+  // Turn is p2 (has 190 chips left, already posted 10). P2 calls 50.
+  engine.playerAction('p2', { action: 'call' });
+  assert.equal(room.gameState.players.p2.totalBet, 50);
+
+  // Turn is p3 (has 180 chips left, already posted 20). P3 goes all-in for 200!
+  engine.playerAction('p3', { action: 'allin' });
+  assert.equal(room.gameState.players.p3.allIn, true);
+  assert.equal(room.gameState.players.p3.totalBet, 200);
+
+  // Turn back to p2: P2 calls all-in for remaining 150 (total 200)
+  engine.playerAction('p2', { action: 'call' });
+  assert.equal(room.gameState.players.p2.allIn, true);
+  assert.equal(room.gameState.players.p2.totalBet, 200);
+
+  // All 3 players are all-in: auto-runout to 5 cards and showdown!
+  assert.equal(room.gameState.phase, 'SHOWDOWN');
+  assert.equal(room.gameState.pot, 450); // 50 + 200 + 200
+
+  // Main pot (level 50): 50 * 3 = 150. P1 has best hand (Pair of Aces) -> wins 150.
+  // Side pot (level 200): 150 * 2 = 300. P2 has 2nd best hand (Pair of Kings) -> beats P3 (Pair of Queens) -> wins 300.
+  assert.equal(room.gameState.results.payouts.p1, 150);
+  assert.equal(room.gameState.results.payouts.p2, 300);
+  assert.equal(room.players.p1.chips, 150);
+  assert.equal(room.players.p2.chips, 300);
+  assert.equal(room.players.p3.chips, 0);
+
+  // P3 is bankrupt
+  assert.equal(room.activeBankruptcies.length, 1);
+  assert.equal(room.activeBankruptcies[0].playerId, 'p3');
+});
+
+test('dealer button advances to immediate next surviving seat when a player busts out', () => {
+  const rm = new RoomManager();
+  const room = rm.createRoom({ hostName: 'P1', playerId: 'p1', socketId: 's1', initialChips: 500 });
+  rm.joinRoom({ roomCode: room.code, playerName: 'P2', playerId: 'p2', socketId: 's2', initialChips: 20 });
+  rm.joinRoom({ roomCode: room.code, playerName: 'P3', playerId: 'p3', socketId: 's3', initialChips: 500 });
+  rm.joinRoom({ roomCode: room.code, playerName: 'P4', playerId: 'p4', socketId: 's4', initialChips: 500 });
+
+  const engine = new PokerEngine(room, rm);
+
+  // Hand 1: Dealer is P1
+  engine.startHand();
+  assert.equal(room.gameState.dealerPlayerId, 'p1');
+  assert.equal(room.pokerDealerPlayerId, 'p1');
+  // Turn order pre-flop: UTG is P4 ((0+3)%4 = 3)
+  engine.playerAction('p4', { action: 'fold' });
+  engine.playerAction('p1', { action: 'call' });
+  engine.playerAction('p2', { action: 'fold' });
+  engine.playerAction('p3', { action: 'fold' });
+  assert.equal(room.gameState.phase, 'SHOWDOWN');
+
+  // Hand 2: Next dealer clockwise after P1 in ['p1', 'p2', 'p3', 'p4'] is P2!
+  // In Hand 2, P2 only has 20 chips and will bust out!
+  // Dealer is P2. SB is P3 (posts 10), BB is P4 (posts 20).
+  // Pre-flop first to act is P1 (UTG).
+  engine.startHand();
+  assert.equal(room.gameState.dealerPlayerId, 'p2');
+  assert.equal(room.pokerDealerPlayerId, 'p2');
+
+  // P1 raises to 50
+  engine.playerAction('p1', { action: 'raise', amount: 50 });
+  // P2 goes all-in with their remaining chips (20)
+  engine.playerAction('p2', { action: 'allin' });
+  // P3 folds, P4 folds
+  engine.playerAction('p3', { action: 'fold' });
+  engine.playerAction('p4', { action: 'fold' });
+
+  // P1 vs P2 showdown -> P2 chips become 0
+  assert.equal(room.players.p2.chips, 0);
+
+  // Hand 3: P2 has busted out! Surviving seats in room.playerOrder are ['p1', 'p3', 'p4'].
+  // Previous dealer was P2. Next seat clockwise in playerOrder after P2 is P3!
+  // It MUST NOT skip P3 to P4!
+  engine.startHand();
+  assert.equal(room.pokerDealerPlayerId, 'p3');
+  assert.equal(room.gameState.dealerPlayerId, 'p3');
 });

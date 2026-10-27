@@ -274,10 +274,30 @@ class PokerEngine {
       throw new Error('ต้องการผู้เล่นอย่างน้อย 2 คนที่มีชิปเพื่อเริ่มเล่น');
     }
 
+    let dealerPlayerId;
+    if (!this.room.pokerDealerPlayerId) {
+      // First hand: start at first active player
+      dealerPlayerId = activePlayerIds[0];
+    } else {
+      // Find next surviving seat clockwise in room.playerOrder
+      const prevIdx = this.room.playerOrder.indexOf(this.room.pokerDealerPlayerId);
+      const totalSeats = this.room.playerOrder.length;
+      for (let i = 1; i <= totalSeats; i++) {
+        const nextPid = this.room.playerOrder[(prevIdx + i) % totalSeats];
+        if (activePlayerIds.includes(nextPid)) {
+          dealerPlayerId = nextPid;
+          break;
+        }
+      }
+      if (!dealerPlayerId) {
+        dealerPlayerId = activePlayerIds[0];
+      }
+    }
+
+    const dealerIdx = activePlayerIds.indexOf(dealerPlayerId);
+    this.room.pokerDealerPlayerId = dealerPlayerId;
+    this.room.pokerDealerIdx = dealerIdx;
     const N = activePlayerIds.length;
-    this.room.pokerDealerIdx = ((this.room.pokerDealerIdx ?? -1) + 1) % N;
-    const dealerIdx = this.room.pokerDealerIdx;
-    const dealerPlayerId = activePlayerIds[dealerIdx];
 
     let sbIdx;
     let bbIdx;
@@ -643,50 +663,95 @@ class PokerEngine {
       handDetails[pid] = evaluateBestPokerHand(allCards);
     }
 
-    let bestEval = null;
-    let winners = [];
+    // Side Pot calculation: slice pot into levels based on distinct contribution levels
+    const allPlayers = Object.values(this.room.gameState.players);
+    const contributors = allPlayers.filter(p => p.totalBet > 0);
+    const uniqueLevels = [...new Set(contributors.map(p => p.totalBet))].sort((a, b) => a - b);
 
-    for (const pid of nonFoldedPlayerIds) {
-      const ev = handDetails[pid];
-      if (!bestEval) {
-        bestEval = ev;
-        winners = [pid];
+    let prevLevel = 0;
+    const payouts = {};
+    const allWinners = [];
+
+    for (const level of uniqueLevels) {
+      const subPot = contributors.reduce((sum, p) => {
+        return sum + Math.max(0, Math.min(p.totalBet, level) - prevLevel);
+      }, 0);
+
+      if (subPot <= 0) {
+        prevLevel = level;
+        continue;
+      }
+
+      // Eligible contenders for subPot are non-folded players with totalBet >= level
+      const eligibleContenders = nonFoldedPlayerIds.filter(
+        pid => this.room.gameState.players[pid].totalBet >= level
+      );
+
+      if (eligibleContenders.length === 0) {
+        // Return uncalled excess to contributors at this level
+        const contributorsAtLevel = contributors.filter(p => p.totalBet >= level);
+        const refundShare = Math.floor(subPot / contributorsAtLevel.length);
+        let refundRemainder = subPot % contributorsAtLevel.length;
+        for (const p of contributorsAtLevel) {
+          let refundAmount = refundShare;
+          if (refundRemainder > 0) {
+            refundAmount += 1;
+            refundRemainder -= 1;
+          }
+          this.room.players[p.playerId].chips += refundAmount;
+          payouts[p.playerId] = (payouts[p.playerId] || 0) + refundAmount;
+        }
       } else {
-        const cmp = comparePokerHands(ev, bestEval);
-        if (cmp > 0) {
-          bestEval = ev;
-          winners = [pid];
-        } else if (cmp === 0) {
-          winners.push(pid);
+        // Find best hand(s) among eligible contenders
+        let bestEval = null;
+        let subWinners = [];
+
+        for (const pid of eligibleContenders) {
+          const ev = handDetails[pid];
+          if (!bestEval) {
+            bestEval = ev;
+            subWinners = [pid];
+          } else {
+            const cmp = comparePokerHands(ev, bestEval);
+            if (cmp > 0) {
+              bestEval = ev;
+              subWinners = [pid];
+            } else if (cmp === 0) {
+              subWinners.push(pid);
+            }
+          }
+        }
+
+        // Split subPot among subWinners, earliest seat in room.playerOrder gets remainder
+        const sortedSubWinners = [...subWinners].sort((a, b) => {
+          return this.room.playerOrder.indexOf(a) - this.room.playerOrder.indexOf(b);
+        });
+
+        const share = Math.floor(subPot / sortedSubWinners.length);
+        let remainder = subPot % sortedSubWinners.length;
+
+        for (const pid of sortedSubWinners) {
+          let winAmount = share;
+          if (remainder > 0) {
+            winAmount += 1;
+            remainder -= 1;
+          }
+          payouts[pid] = (payouts[pid] || 0) + winAmount;
+          this.room.players[pid].chips += winAmount;
+          if (!allWinners.includes(pid)) {
+            allWinners.push(pid);
+          }
         }
       }
-    }
 
-    const pot = this.room.gameState.pot;
-    // Earliest seat in room.playerOrder gets remainder
-    const sortedWinners = [...winners].sort((a, b) => {
-      return this.room.playerOrder.indexOf(a) - this.room.playerOrder.indexOf(b);
-    });
-
-    const share = Math.floor(pot / sortedWinners.length);
-    let remainder = pot % sortedWinners.length;
-    const payouts = {};
-
-    for (const pid of sortedWinners) {
-      let winAmount = share;
-      if (remainder > 0) {
-        winAmount += 1;
-        remainder -= 1;
-      }
-      payouts[pid] = winAmount;
-      this.room.players[pid].chips += winAmount;
+      prevLevel = level;
     }
 
     this.room.gameState.results = {
-      winners,
+      winners: allWinners,
       payouts,
       handDetails,
-      pot
+      pot: this.room.gameState.pot
     };
 
     this.roomManager.checkAndTriggerBankruptcies(this.room);
