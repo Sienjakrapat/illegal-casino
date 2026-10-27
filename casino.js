@@ -142,6 +142,7 @@
     roomCode: null,
     roomState: null,
     draftBet: 100,
+    draftMultiplier: 1,
     prevPhase: null,
     prevBankruptCount: 0,
     adminDraftPunishments: [],
@@ -426,11 +427,47 @@
     const gameMeta = {
       pokdeng: { icon: '🎴', name: 'ป๊อกเด้ง' },
       blackjack: { icon: '🃏', name: 'แบล็คแจ็ค 21' },
-      poker: { icon: '♠️', name: "Texas Hold'em" }
+      poker: { icon: '♠️', name: "Texas Hold'em" },
+      realcards: { icon: '🖐️', name: 'โหมดไพ่ของจริง' }
     }[activeGame] || { icon: '🎴', name: 'ป๊อกเด้ง' };
 
     el.hudGameIcon.textContent = gameMeta.icon;
     el.hudGameName.textContent = gameMeta.name;
+
+    if (activeGame === 'realcards') {
+      const isPlayerDealer = state.dealer?.mode === 'player' && state.dealer.playerId;
+      const dealerName = isPlayerDealer
+        ? `👑 เจ้ามือ: ${escapeHtml(state.players[state.dealer.playerId]?.name || 'ผู้เล่น')} (${state.dealer.roundsLeft} ตา)`
+        : '🤖 กองกลาง / เจ้ามือกลาง (Auto Dealer)';
+      const subGame = gs?.subGame || state.settings?.realCardsSubGame || 'pokdeng';
+      const subGameLabels = {
+        pokdeng: '🎴 ป๊อกเด้ง (1x-5x)',
+        blackjack: '🃏 แบล็คแจ็ค (1x/1.5x/2x)',
+        custom: '⚡ กำหนดเกม/อัตราจ่ายอิสระ'
+      };
+      el.dealerCommunityZone.innerHTML = `
+        <div class="zone-header">
+          <span>🖐️ โหมดไพ่ของจริง • ${dealerName}</span>
+          <span class="pot-pill">${subGameLabels[subGame] || '🎴 ป๊อกเด้ง'}</span>
+        </div>
+        <div class="chip-bet-bar" style="margin-top:0.35rem;justify-content:center;">
+          <button type="button" class="chip-btn ${subGame === 'pokdeng' ? 'chip-allin' : ''}" data-rc-subgame="pokdeng">🎴 ป๊อกเด้ง</button>
+          <button type="button" class="chip-btn ${subGame === 'blackjack' ? 'chip-allin' : ''}" data-rc-subgame="blackjack">🃏 แบล็คแจ็ค</button>
+          <button type="button" class="chip-btn ${subGame === 'custom' ? 'chip-allin' : ''}" data-rc-subgame="custom">⚡ เก้าเก / กำหนดเอง</button>
+        </div>
+      `;
+      el.dealerCommunityZone.querySelectorAll('[data-rc-subgame]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const chosen = btn.dataset.rcSubgame;
+          socket.emit('game:switchMode', {
+            roomCode: clientState.roomCode,
+            playerId: clientState.playerId,
+            subGame: chosen
+          });
+        });
+      });
+      return;
+    }
 
     if (activeGame === 'poker') {
       const dPid = state.gameState?.dealerPlayerId;
@@ -526,6 +563,13 @@
         };
         el.tableStatusBanner.textContent = map[gs.phase] || gs.phase;
       }
+    } else if (activeGame === 'realcards') {
+      const map = {
+        BETTING: '🪙 โหมดไพ่ของจริง (รอบวางเดิมพัน) — กดยืนยันเดิมพันหรือข้ามให้ครบทุกคนเพื่อเริ่มแจกไพ่จริง!',
+        PLAYING: '🖐️ แจกไพ่ของจริงหน้าวงได้เลย! ดูไพ่ในมือแล้วเลือก "อัตราจ่าย" และกด "ชนะ / เสมอ / แพ้" ด้านล่าง',
+        SETTLED: '🏁 สรุปผลชิปโหมดไพ่ของจริงเรียบร้อย!'
+      };
+      el.tableStatusBanner.textContent = map[gs.phase] || gs.phase;
     } else if (activeGame === 'poker') {
       if (gs.phase === 'SHOWDOWN') {
         const winners = (gs.results?.winners || []).map(pid => state.players[pid]?.name || pid).join(', ');
@@ -565,7 +609,21 @@
 
       let cardsHtml = '';
 
-      if (activeGame === 'pokdeng' || activeGame === 'blackjack') {
+      if (activeGame === 'realcards') {
+        const bet = gs?.bets?.[pid];
+        if (bet > 0) badges.push(`<span class="mini-pill bet">เดิมพัน: ${formatChips(bet)}</span>`);
+        else if (bet === 0) badges.push(`<span class="mini-pill">⏭️ ไม่ลงเดิมพัน</span>`);
+        const out = gs?.outcomes?.[pid];
+        if (out && out.label) {
+          badges.push(`<span class="mini-pill ${out.done ? 'eval' : ''}">${escapeHtml(out.label)}</span>`);
+        }
+        const delta = gs?.results?.settlements?.[pid];
+        if (typeof delta === 'number') {
+          const cls = delta >= 0 ? 'win' : 'lose';
+          const sign = delta > 0 ? '+' : '';
+          badges.push(`<span class="mini-pill ${cls}">${sign}${formatChips(delta)}</span>`);
+        }
+      } else if (activeGame === 'pokdeng' || activeGame === 'blackjack') {
         const bet = gs?.bets?.[pid];
         if (bet > 0) badges.push(`<span class="mini-pill bet">เดิมพัน: ${formatChips(bet)}</span>`);
         else if (bet === 0) badges.push(`<span class="mini-pill">⏭️ ไม่ลงเดิมพัน</span>`);
@@ -649,7 +707,26 @@
 
     // Render Own Cards
     let ownCards = [];
-    if (activeGame === 'pokdeng' || activeGame === 'blackjack') {
+    if (activeGame === 'realcards') {
+      const myBet = gs?.bets?.[myId];
+      if (myBet > 0) {
+        el.ownBetBadge.textContent = `เดิมพัน: ${formatChips(myBet)}`;
+        el.ownBetBadge.classList.remove('hidden');
+      } else if (myBet === 0) {
+        el.ownBetBadge.textContent = '⏭️ ไม่ลงเดิมพันตานี้';
+        el.ownBetBadge.classList.remove('hidden');
+      }
+      const myOut = gs?.outcomes?.[myId];
+      if (myOut?.label) {
+        el.ownStatusBadge.textContent = myOut.label;
+        el.ownStatusBadge.classList.remove('hidden');
+      }
+      const delta = gs?.results?.settlements?.[myId];
+      if (typeof delta === 'number') {
+        el.ownDeltaBadge.textContent = `${delta > 0 ? '+' : ''}${formatChips(delta)}`;
+        el.ownDeltaBadge.className = `delta-pill ${delta >= 0 ? 'win' : 'lose'}`;
+      }
+    } else if (activeGame === 'pokdeng' || activeGame === 'blackjack') {
       const myHand = isHumanDealer ? gs?.dealerHand : gs?.hands?.[myId];
       if (myHand && Array.isArray(myHand.cards)) {
         ownCards = myHand.cards;
@@ -698,9 +775,13 @@
       }
     }
 
-    el.ownCardsContainer.innerHTML = ownCards.length > 0
-      ? ownCards.map(c => renderCardHtml(c, true)).join('')
-      : `<span style="color:var(--text-muted);font-size:0.86rem;">ไพ่ของคุณจะแสดงตรงนี้เมื่อเริ่มแจกไพ่</span>`;
+    if (activeGame === 'realcards') {
+      el.ownCardsContainer.innerHTML = `<span style="color:var(--neon-gold-bright);font-size:0.86rem;">🖐️ ใช้ไพ่ของจริงหน้าวง — เลือกเกม อัตราจ่าย และกดผลลัพธ์ด้านล่างได้เลย</span>`;
+    } else {
+      el.ownCardsContainer.innerHTML = ownCards.length > 0
+        ? ownCards.map(c => renderCardHtml(c, true)).join('')
+        : `<span style="color:var(--text-muted);font-size:0.86rem;">ไพ่ของคุณจะแสดงตรงนี้เมื่อเริ่มแจกไพ่</span>`;
+    }
 
     // Render Contextual Action Buttons
     renderActionButtons(state, you, activeGame, gs, isHumanDealer);
@@ -709,12 +790,18 @@
   function renderActionButtons(state, you, activeGame, gs, isHumanDealer) {
     const myId = clientState.playerId;
 
-    // 1. IDLE or SETTLED or SHOWDOWN -> Start New Round button
+        // 1. IDLE or SETTLED or SHOWDOWN -> Start New Round & Quick Mode Switch
     if (!gs || gs.phase === 'SETTLED' || gs.phase === 'SHOWDOWN') {
       el.actionControlsDock.innerHTML = `
+        <div class="chip-bet-bar" style="margin-bottom:0.4rem;">
+          <button type="button" class="chip-btn ${activeGame === 'pokdeng' ? 'chip-allin' : ''}" data-quick-mode="pokdeng">🎴 ป๊อกเด้ง</button>
+          <button type="button" class="chip-btn ${activeGame === 'blackjack' ? 'chip-allin' : ''}" data-quick-mode="blackjack">🃏 แบล็คแจ็ค</button>
+          <button type="button" class="chip-btn ${activeGame === 'poker' ? 'chip-allin' : ''}" data-quick-mode="poker">♠️ โป๊กเกอร์</button>
+          <button type="button" class="chip-btn ${activeGame === 'realcards' ? 'chip-allin' : ''}" data-quick-mode="realcards">🖐️ ไพ่ของจริง</button>
+        </div>
         <div class="action-btn-row">
           <button type="button" id="btn-start-round" class="btn-neon btn-gold btn-block">
-            🚀 เริ่มตาใหม่ (Start Round)
+            🚀 เริ่มตาใหม่ (${activeGame === 'realcards' ? 'โหมดไพ่ของจริง' : 'Start Round'})
           </button>
           ${activeGame !== 'poker' ? `
             <button type="button" id="btn-dock-dealer" class="btn-neon btn-outline">
@@ -723,6 +810,19 @@
           ` : ''}
         </div>
       `;
+      el.actionControlsDock.querySelectorAll('[data-quick-mode]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetMode = btn.dataset.quickMode;
+          socket.emit('game:switchMode', {
+            roomCode: clientState.roomCode,
+            playerId: myId,
+            activeGame: targetMode
+          }, res => {
+            if (!res?.ok) showToast(res?.error || 'สลับโหมดไม่สำเร็จ', true);
+            else showToast(`สลับเป็นโหมด ${btn.textContent.trim()} แล้ว!`);
+          });
+        });
+      });
       document.getElementById('btn-start-round')?.addEventListener('click', () => {
         emitGameStartRound();
       });
@@ -732,8 +832,8 @@
       return;
     }
 
-    // 2. BETTING PHASE (Pok Deng & Blackjack)
-    if (gs.phase === 'BETTING' && (activeGame === 'pokdeng' || activeGame === 'blackjack')) {
+    // 2. BETTING PHASE (Pok Deng, Blackjack & Real Cards)
+    if (gs.phase === 'BETTING' && (activeGame === 'pokdeng' || activeGame === 'blackjack' || activeGame === 'realcards')) {
       const rawBetVal = gs.bets?.[myId];
       const isSkipped = rawBetVal === 0;
       const currentPlacedBet = rawBetVal > 0 ? rawBetVal : 0;
@@ -752,7 +852,7 @@
       if (isHumanDealer) {
         el.actionControlsDock.innerHTML = `
           <div class="text-center" style="color:var(--neon-gold-bright);font-size:0.92rem;padding:0.45rem 0;">
-            ⏳ รอผู้เล่นยืนยันเดิมพันให้ครบ (${confirmedCount}/${totalEligible} คน) — ครบแล้วแจกไพ่อัตโนมัติ!
+            ⏳ รอผู้เล่นยืนยันเดิมพันให้ครบ (${confirmedCount}/${totalEligible} คน) — ครบแล้วเริ่มตาทันที!
           </div>
         `;
         return;
@@ -831,127 +931,133 @@
       return;
     }
 
-      el.actionControlsDock.innerHTML = `
-        <div class="chip-bet-bar">
-          <button type="button" class="chip-btn" data-add-chip="50">+50</button>
-          <button type="button" class="chip-btn" data-add-chip="100">+100</button>
-          <button type="button" class="chip-btn" data-add-chip="500">+500</button>
-          <button type="button" class="chip-btn chip-allin" id="btn-chip-allin">เทหน้าตัก All-in</button>
-          <button type="button" class="chip-btn chip-clear" id="btn-chip-clear">ล้าง</button>
-        </div>
-        <div class="action-btn-row">
-          <button type="button" id="btn-confirm-bet" class="btn-neon ${currentPlacedBet > 0 ? 'btn-emerald' : 'btn-primary'} btn-block">
-            ${currentPlacedBet > 0
-              ? `✅ ยืนยันแล้ว (${formatChips(currentPlacedBet)}) — รอเพื่อน (${confirmedCount}/${totalEligible} คน)`
-              : `🪙 ยืนยันเดิมพัน (${formatChips(clientState.draftBet)}) — (${confirmedCount}/${totalEligible} คน)`}
-          </button>
-        </div>
-      `;
+    // 2.5 REAL CARDS PLAYING PHASE (Select Multiplier & Win/Tie/Lose)
+    if (activeGame === 'realcards' && gs.phase === 'PLAYING') {
+      const activePids = gs.activePlayers || [];
+      const doneCount = activePids.filter(pid => gs.outcomes?.[pid]?.done).length;
+      const totalActive = activePids.length;
+      const myOutcome = gs.outcomes?.[myId];
+      const myBet = gs.bets?.[myId] || 0;
 
-      el.actionControlsDock.querySelectorAll('[data-add-chip]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const add = Number(btn.dataset.addChip) || 0;
-          clientState.draftBet = Math.min(you.chips, clientState.draftBet + add);
-          sfx.playChipBet();
-          renderOwnHandAndActions(clientState.roomState);
-        });
-      });
-
-      document.getElementById('btn-chip-allin')?.addEventListener('click', () => {
-        clientState.draftBet = you.chips;
-        sfx.playChipBet();
-        renderOwnHandAndActions(clientState.roomState);
-      });
-
-      document.getElementById('btn-chip-clear')?.addEventListener('click', () => {
-        clientState.draftBet = Math.min(50, you.chips);
-        renderOwnHandAndActions(clientState.roomState);
-      });
-
-      document.getElementById('btn-confirm-bet')?.addEventListener('click', () => {
-        if (clientState.draftBet <= 0) {
-          showToast('กรุณาเลือกชิปเดิมพัน', true);
-          return;
-        }
-        socket.emit(
-          'game:placeBet',
-          { roomCode: clientState.roomCode, playerId: myId, amount: clientState.draftBet },
-          res => {
-            if (!res?.ok) showToast(res?.error || 'วางเดิมพันไม่สำเร็จ', true);
-            else {
-              sfx.playChipBet();
-              showToast(`ยืนยันเดิมพัน ${formatChips(clientState.draftBet)} ชิปแล้ว!`);
-            }
-          }
-        );
-      });
-      return;
-    }
-
-      const isPlayerDealerMode = state.dealer?.mode === 'player';
-      const canDealInAuto = !isPlayerDealerMode && (currentPlacedBet > 0 || you.isAdmin);
-
-      el.actionControlsDock.innerHTML = `
-        <div class="chip-bet-bar">
-          <button type="button" class="chip-btn" data-add-chip="50">+50</button>
-          <button type="button" class="chip-btn" data-add-chip="100">+100</button>
-          <button type="button" class="chip-btn" data-add-chip="500">+500</button>
-          <button type="button" class="chip-btn chip-allin" id="btn-chip-allin">เทหน้าตัก All-in</button>
-          <button type="button" class="chip-btn chip-clear" id="btn-chip-clear">ล้าง</button>
-        </div>
-        <div class="action-btn-row">
-          <button type="button" id="btn-confirm-bet" class="btn-neon btn-primary">
-            🪙 ยืนยันเดิมพัน (${formatChips(clientState.draftBet)})
-          </button>
-          ${canDealInAuto ? `
-            <button type="button" id="btn-deal-cards" class="btn-neon btn-gold">
-              🃏 แจกไพ่ ${currentPlacedBet > 0 ? '✓' : ''}
-            </button>
+      if (isHumanDealer || !activePids.includes(myId)) {
+        el.actionControlsDock.innerHTML = `
+          <div class="text-center" style="color:var(--neon-gold-bright);font-size:0.9rem;margin-bottom:0.4rem;">
+            🖐️ รอผู้เล่นกดเลือกผลไพ่ของจริง (${doneCount}/${totalActive} คน)
+          </div>
+          ${(isHumanDealer || you.isAdmin) ? `
+            <div class="action-btn-row">
+              <button type="button" id="btn-rc-force-settle" class="btn-neon btn-gold btn-block">
+                ⚖️ สรุปผลชิปทันที (${doneCount}/${totalActive} คนยืนยันแล้ว)
+              </button>
+            </div>
           ` : ''}
+        `;
+        document.getElementById('btn-rc-force-settle')?.addEventListener('click', () => {
+          emitGameAction('settle');
+        });
+        return;
+      }
+
+      const subGame = gs.subGame || state.settings?.realCardsSubGame || 'pokdeng';
+      const pdPay = state.settings?.payouts?.pokdeng || {};
+      const bjPay = state.settings?.payouts?.blackjack || {};
+
+      let multPresets = [
+        { mult: pdPay.normal || 1, label: `1x (ปกติ)` },
+        { mult: pdPay.deng2 || 2, label: `${pdPay.deng2 || 2}x (2 เด้ง)` },
+        { mult: pdPay.deng3 || 3, label: `${pdPay.deng3 || 3}x (3 เด้ง/เรียง/เซียน)` },
+        { mult: pdPay.tong || 5, label: `${pdPay.tong || 5}x (ตอง)` }
+      ];
+      if (subGame === 'blackjack') {
+        multPresets = [
+          { mult: bjPay.normal || 1, label: '1x (ชนะปกติ)' },
+          { mult: bjPay.blackjack || 1.5, label: `${bjPay.blackjack || 1.5}x (Blackjack)` },
+          { mult: 2, label: '2x (Double)' }
+        ];
+      } else if (subGame === 'custom') {
+        multPresets = [
+          { mult: 1, label: '1x' },
+          { mult: 1.5, label: '1.5x' },
+          { mult: 2, label: '2x' },
+          { mult: 3, label: '3x' },
+          { mult: 5, label: '5x' }
+        ];
+      }
+
+      const curMult = Number(clientState.draftMultiplier) || 1;
+      const expectedChips = Math.ceil(myBet * curMult);
+
+      el.actionControlsDock.innerHTML = `
+        <div class="chip-bet-bar" style="align-items:center;">
+          <span style="font-size:0.78rem;color:var(--text-muted);margin-right:0.2rem;">อัตราจ่าย:</span>
+          ${multPresets.map(p => `
+            <button type="button" class="chip-btn ${curMult === Number(p.mult) ? 'chip-allin' : ''}" data-rc-mult="${p.mult}">
+              ${p.label}
+            </button>
+          `).join('')}
+          <input type="number" id="input-rc-custom-mult" class="neon-input" value="${curMult}" min="0.5" max="100" step="0.5" style="width:70px;padding:0.25rem 0.4rem;font-size:0.85rem;text-align:center;" title="กำหนดอัตราจ่ายเอง (เท่า)">
         </div>
+        <div class="action-btn-row">
+          <button type="button" id="btn-rc-win" class="btn-neon btn-emerald">
+            🏆 ชนะ (+${formatChips(expectedChips)})
+          </button>
+          <button type="button" id="btn-rc-tie" class="btn-neon btn-outline">
+            🤝 เสมอ (0)
+          </button>
+          <button type="button" id="btn-rc-lose" class="btn-neon btn-crimson">
+            💸 แพ้ (-${formatChips(expectedChips)})
+          </button>
+        </div>
+        ${myOutcome?.done ? `
+          <div class="text-center" style="font-size:0.82rem;color:var(--neon-emerald);margin-top:0.25rem;">
+            ✅ บันทึกแล้ว: ${escapeHtml(myOutcome.label)} — รอเพื่อน (${doneCount}/${totalActive} คน) (กดเปลี่ยนผลได้จนกว่าจะครบทุกคน)
+          </div>
+        ` : ''}
       `;
 
-      el.actionControlsDock.querySelectorAll('[data-add-chip]').forEach(btn => {
+      el.actionControlsDock.querySelectorAll('[data-rc-mult]').forEach(btn => {
         btn.addEventListener('click', () => {
-          const add = Number(btn.dataset.addChip) || 0;
-          clientState.draftBet = Math.min(you.chips, clientState.draftBet + add);
+          clientState.draftMultiplier = Number(btn.dataset.rcMult) || 1;
           sfx.playChipBet();
           renderOwnHandAndActions(clientState.roomState);
         });
       });
 
-      document.getElementById('btn-chip-allin')?.addEventListener('click', () => {
-        clientState.draftBet = you.chips;
-        sfx.playChipBet();
-        renderOwnHandAndActions(clientState.roomState);
-      });
-
-      document.getElementById('btn-chip-clear')?.addEventListener('click', () => {
-        clientState.draftBet = Math.min(50, you.chips);
-        renderOwnHandAndActions(clientState.roomState);
-      });
-
-      document.getElementById('btn-confirm-bet')?.addEventListener('click', () => {
-        if (clientState.draftBet <= 0) {
-          showToast('กรุณาเลือกชิปเดิมพัน', true);
-          return;
+      const multInput = document.getElementById('input-rc-custom-mult');
+      multInput?.addEventListener('change', () => {
+        const val = Number(multInput.value);
+        if (!Number.isNaN(val) && val > 0) {
+          clientState.draftMultiplier = val;
+          renderOwnHandAndActions(clientState.roomState);
         }
+      });
+
+      const sendOutcome = (outcome) => {
+        const inputVal = Number(document.getElementById('input-rc-custom-mult')?.value);
+        const mult = (!Number.isNaN(inputVal) && inputVal > 0) ? inputVal : (clientState.draftMultiplier || 1);
+        clientState.draftMultiplier = mult;
         socket.emit(
-          'game:placeBet',
-          { roomCode: clientState.roomCode, playerId: myId, amount: clientState.draftBet },
+          'game:action',
+          {
+            roomCode: clientState.roomCode,
+            playerId: myId,
+            action: outcome,
+            outcome,
+            multiplier: outcome === 'tie' ? 1 : mult
+          },
           res => {
-            if (!res?.ok) showToast(res?.error || 'วางเดิมพันไม่สำเร็จ', true);
+            if (!res?.ok) showToast(res?.error || 'บันทึกผลไม่สำเร็จ', true);
             else {
               sfx.playChipBet();
-              showToast(`วางเดิมพัน ${formatChips(clientState.draftBet)} ชิปแล้ว!`);
+              showToast('บันทึกผลไพ่จริงเรียบร้อย!');
             }
           }
         );
-      });
+      };
 
-      document.getElementById('btn-deal-cards')?.addEventListener('click', () => {
-        emitGameAction('deal');
-      });
+      document.getElementById('btn-rc-win')?.addEventListener('click', () => sendOutcome('win'));
+      document.getElementById('btn-rc-tie')?.addEventListener('click', () => sendOutcome('tie'));
+      document.getElementById('btn-rc-lose')?.addEventListener('click', () => sendOutcome('lose'));
       return;
     }
 

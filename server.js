@@ -6,6 +6,7 @@ const { RoomManager } = require('./src/roomManager');
 const { PokDengEngine } = require('./src/games/pokdeng');
 const { BlackjackEngine } = require('./src/games/blackjack');
 const { PokerEngine } = require('./src/games/poker');
+const { RealCardsEngine } = require('./src/games/realcards');
 
 function normalizeArgs(payload, callback) {
   if (typeof payload === 'function') {
@@ -71,6 +72,8 @@ function createCasinoServer() {
       engine = new BlackjackEngine(room, roomManager);
     } else if (activeGame === 'poker') {
       engine = new PokerEngine(room, roomManager);
+    } else if (activeGame === 'realcards') {
+      engine = new RealCardsEngine(room, roomManager);
     } else {
       throw new Error(`ไม่รองรับเกม: ${activeGame}`);
     }
@@ -209,10 +212,43 @@ function createCasinoServer() {
       }
     });
 
+    socket.on('game:switchMode', (rawPayload, rawCb) => {
+      const [payload, callback] = normalizeArgs(rawPayload, rawCb);
+      try {
+        const { roomCode, playerId, activeGame, subGame } = payload;
+        const room = roomManager.getRoom(roomCode);
+        getAuthenticatedPlayer(room, socket.id, playerId);
+
+        if (activeGame && activeGame !== room.settings.activeGame) {
+          if (!['pokdeng', 'blackjack', 'poker', 'realcards'].includes(activeGame)) {
+            throw new Error(`ไม่รองรับเกม: ${activeGame}`);
+          }
+          if (isRoundActivelyInProgress(room, true)) {
+            throw new Error('ไม่สามารถสลับเกมระหว่างที่กำลังเล่นอยู่ได้');
+          }
+          room.settings.activeGame = activeGame;
+          room.gameState = null;
+          engines.delete(roomCode);
+        }
+
+        if (subGame) {
+          room.settings.realCardsSubGame = subGame;
+          if (room.gameState && room.gameState.game === 'realcards') {
+            room.gameState.subGame = subGame;
+          }
+        }
+
+        broadcastRoomState(roomCode);
+        callback?.({ ok: true });
+      } catch (err) {
+        callback?.({ ok: false, error: err.message });
+      }
+    });
+
     socket.on('game:startRound', (rawPayload, rawCb) => {
       const [payload, callback] = normalizeArgs(rawPayload, rawCb);
       try {
-        const { roomCode, playerId } = payload;
+        const { roomCode, playerId, subGame } = payload;
         const room = roomManager.getRoom(roomCode);
         getAuthenticatedPlayer(room, socket.id, playerId);
         if (isRoundActivelyInProgress(room, true)) {
@@ -224,6 +260,8 @@ function createCasinoServer() {
 
         if (game === 'pokdeng' || game === 'blackjack') {
           engine.startBetting();
+        } else if (game === 'realcards') {
+          engine.startBetting(subGame);
         } else if (game === 'poker') {
           engine.startHand();
         } else {
@@ -279,16 +317,6 @@ function createCasinoServer() {
         callback?.({ ok: false, error: err.message });
       }
     });
-        const allBetPlaced = eligiblePids.length > 0 && eligiblePids.every(pid => (room.gameState?.bets?.[pid] || 0) > 0);
-        if (allBetPlaced && room.gameState?.phase === 'BETTING') {
-          engine.dealRound();
-        }
-        broadcastRoomState(roomCode);
-        callback?.({ ok: true });
-      } catch (err) {
-        callback?.({ ok: false, error: err.message });
-      }
-    });
 
     socket.on('game:action', (rawPayload, rawCb) => {
       const [payload, callback] = normalizeArgs(rawPayload, rawCb);
@@ -300,12 +328,25 @@ function createCasinoServer() {
         const engine = getOrCreateEngine(roomCode);
         const game = room.settings?.activeGame || 'pokdeng';
 
-        if (action === 'deal' && (game === 'pokdeng' || game === 'blackjack')) {
+        if (action === 'deal' && (game === 'pokdeng' || game === 'blackjack' || game === 'realcards')) {
           if (room.dealer?.mode === 'player' && room.dealer?.playerId !== playerId) {
             throw new Error('เฉพาะเจ้ามือเท่านั้นที่สามารถกดแจกไพ่ได้');
           }
           if (room.gameState?.phase === 'BETTING') {
             engine.dealRound();
+          }
+        } else if (game === 'realcards') {
+          if (action === 'settle') {
+            const isDealer = room.dealer?.mode === 'player' && room.dealer?.playerId === playerId;
+            const isAdmin = Boolean(room.players[playerId]?.isAdmin);
+            if (!isDealer && !isAdmin && room.dealer?.mode === 'player') {
+              throw new Error('เฉพาะเจ้ามือหรือ Admin เท่านั้นที่กดสรุปผลทันทีได้');
+            }
+            engine.settleRound();
+          } else if (action === 'setSubGame') {
+            engine.setSubGame(payload.subGame);
+          } else {
+            engine.playerAction(playerId, payload);
           }
         } else if (game === 'pokdeng' || game === 'blackjack') {
           if (
