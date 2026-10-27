@@ -255,23 +255,6 @@ html, body.casino-body {
   color: var(--neon-gold-bright);
 }
 
-.lobby-footer {
-  margin-top: 1.25rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--border-subtle);
-  text-align: center;
-}
-
-.utility-link {
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  text-decoration: none;
-}
-
-.utility-link:hover {
-  color: var(--neon-gold-bright);
-}
-
 /* ================= BUTTONS ================= */
 .btn-neon {
   font-family: var(--font-thai);
