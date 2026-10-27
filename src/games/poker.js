@@ -429,13 +429,18 @@ class PokerEngine {
 
       if (remainingNonFolded.length === 1) {
         const winnerId = remainingNonFolded[0];
-        this.room.players[winnerId].chips += this.room.gameState.pot;
+        const rakePercent = Number(this.room.settings?.payouts?.poker?.rakePercent) || 0;
+        const totalPot = this.room.gameState.pot;
+        const rake = rakePercent > 0 ? Math.floor(totalPot * (Math.min(25, rakePercent) / 100)) : 0;
+        const winAmount = totalPot - rake;
+        this.room.players[winnerId].chips += winAmount;
         this.room.gameState.phase = 'SHOWDOWN';
         this.room.gameState.currentTurnPlayerId = null;
         this.room.gameState.results = {
           winners: [winnerId],
-          payouts: { [winnerId]: this.room.gameState.pot },
-          pot: this.room.gameState.pot,
+          payouts: { [winnerId]: winAmount },
+          pot: totalPot,
+          rake,
           byFold: true,
           handDetails: {}
         };
@@ -727,8 +732,11 @@ class PokerEngine {
           return this.room.playerOrder.indexOf(a) - this.room.playerOrder.indexOf(b);
         });
 
-        const share = Math.floor(subPot / sortedSubWinners.length);
-        let remainder = subPot % sortedSubWinners.length;
+        const rakePercent = Number(this.room.settings?.payouts?.poker?.rakePercent) || 0;
+        const rake = rakePercent > 0 ? Math.floor(subPot * (Math.min(25, rakePercent) / 100)) : 0;
+        const netSubPot = subPot - rake;
+        const share = Math.floor(netSubPot / sortedSubWinners.length);
+        let remainder = netSubPot % sortedSubWinners.length;
 
         for (const pid of sortedSubWinners) {
           let winAmount = share;

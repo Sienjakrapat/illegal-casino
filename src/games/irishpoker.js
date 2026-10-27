@@ -208,10 +208,21 @@ class IrishPokerEngine {
     const gs = this.room.gameState;
     if (!gs) return null;
 
+    const payouts = this.room.settings?.payouts?.irishpoker || { correct: 1, wrong: 1, allCorrectBonus: 0 };
+    const correctMult = Number(payouts.correct) || 1;
+    const wrongMult = Number(payouts.wrong) || 1;
+    const bonusMult = Number(payouts.allCorrectBonus) || 0;
+
     const deltas = {};
     for (const pid of gs.activePlayers || []) {
       const bet = gs.bets[pid] || 0;
-      deltas[pid] = bet * ((gs.correct[pid] || 0) - (gs.wrong[pid] || 0));
+      const c = gs.correct[pid] || 0;
+      const w = gs.wrong[pid] || 0;
+      let netMult = (c * correctMult) - (w * wrongMult);
+      if (c === ROUND_COUNT && bonusMult > 0) {
+        netMult += bonusMult;
+      }
+      deltas[pid] = Math.round(bet * netMult);
     }
 
     const settlementResult = this.roomManager.settleDealerPayouts(this.room, deltas);

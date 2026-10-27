@@ -10,6 +10,19 @@ const DEFAULT_PAYOUTS = {
   blackjack: {
     normal: 1,
     blackjack: 1.5
+  },
+  poker: {
+    rakePercent: 0
+  },
+  irishpoker: {
+    correct: 1,
+    wrong: 1,
+    allCorrectBonus: 0
+  },
+  realcards: {
+    normal: 1,
+    banker: 0.95,
+    tie: 8
   }
 };
 
@@ -70,7 +83,10 @@ class RoomManager {
       settings: {
         payouts: {
           pokdeng: { ...DEFAULT_PAYOUTS.pokdeng },
-          blackjack: { ...DEFAULT_PAYOUTS.blackjack }
+          blackjack: { ...DEFAULT_PAYOUTS.blackjack },
+          poker: { ...DEFAULT_PAYOUTS.poker },
+          irishpoker: { ...DEFAULT_PAYOUTS.irishpoker },
+          realcards: { ...DEFAULT_PAYOUTS.realcards }
         },
         blinds: { ...DEFAULT_BLINDS },
         punishmentMode: 'verbal',
@@ -154,17 +170,14 @@ class RoomManager {
       throw new Error('เฉพาะ Admin เท่านั้นที่สามารถเปลี่ยนการตั้งค่าได้');
     }
     if (payouts) {
-      if (payouts.pokdeng) {
-        room.settings.payouts.pokdeng = {
-          ...room.settings.payouts.pokdeng,
-          ...payouts.pokdeng
-        };
-      }
-      if (payouts.blackjack) {
-        room.settings.payouts.blackjack = {
-          ...room.settings.payouts.blackjack,
-          ...payouts.blackjack
-        };
+      if (!room.settings.payouts) room.settings.payouts = {};
+      for (const g of ['pokdeng', 'blackjack', 'poker', 'irishpoker', 'realcards']) {
+        if (payouts[g]) {
+          room.settings.payouts[g] = {
+            ...(room.settings.payouts[g] || DEFAULT_PAYOUTS[g] || {}),
+            ...payouts[g]
+          };
+        }
       }
     }
     if (blinds) {

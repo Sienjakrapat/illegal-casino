@@ -366,12 +366,12 @@
           </div>
         </section>
 
-        <!-- 3. Custom Payouts & Blinds -->
+        <!-- 3. Custom Payouts & Blinds for All Games -->
         <section class="admin-section">
-          <h3 class="admin-section-title">⚖️ ปรับอัตราจ่าย & ค่าต๋ง (Custom Payouts & Blinds)</h3>
+          <h3 class="admin-section-title">⚖️ ปรับอัตราจ่ายทุกเกม (Custom All Game Payouts)</h3>
 
           <div class="payout-subbox">
-            <h4>🎴 อัตราจ่าย ป๊อกเด้ง (เท่า)</h4>
+            <h4>🎴 ป๊อกเด้ง (Pok Deng)</h4>
             <div class="payout-grid-3">
               <div class="input-mini">
                 <label for="pay-pd-normal">ชนะปกติ</label>
@@ -401,10 +401,10 @@
           </div>
 
           <div class="payout-subbox">
-            <h4>🃏 อัตราจ่าย แบล็คแจ็ค 21 & ♠️ โป๊กเกอร์ Blinds</h4>
-            <div class="payout-grid-2">
+            <h4>🃏 แบล็คแจ็ค 21 (Blackjack)</h4>
+            <div class="payout-grid-3">
               <div class="input-mini">
-                <label for="pay-bj-normal">ชนะปกติ (BJ)</label>
+                <label for="pay-bj-normal">ชนะปกติ</label>
                 <input type="number" id="pay-bj-normal" step="0.5" min="1" value="1">
               </div>
               <div class="input-mini">
@@ -412,12 +412,62 @@
                 <input type="number" id="pay-bj-blackjack" step="0.5" min="1" value="1.5">
               </div>
               <div class="input-mini">
+                <label for="pay-bj-charlie">5 ใบชาร์ลี (Charlie)</label>
+                <input type="number" id="pay-bj-charlie" step="0.5" min="1" value="2">
+              </div>
+            </div>
+          </div>
+
+          <div class="payout-subbox">
+            <h4>♠️ เท็กซัส โป๊กเกอร์ (Texas Hold'em Blinds & Rake)</h4>
+            <div class="payout-grid-3">
+              <div class="input-mini">
                 <label for="blind-sb">Small Blind</label>
                 <input type="number" id="blind-sb" step="5" min="1" value="10">
               </div>
               <div class="input-mini">
                 <label for="blind-bb">Big Blind</label>
                 <input type="number" id="blind-bb" step="5" min="2" value="20">
+              </div>
+              <div class="input-mini">
+                <label for="pay-pk-rake">ค่าต๋งโต๊ะ (Rake %)</label>
+                <input type="number" id="pay-pk-rake" step="1" min="0" max="25" value="0">
+              </div>
+            </div>
+          </div>
+
+          <div class="payout-subbox">
+            <h4>🍀 ไอริชโป๊กเกอร์ (Irish Poker 4 Rounds)</h4>
+            <div class="payout-grid-3">
+              <div class="input-mini">
+                <label for="pay-irish-correct">ทายถูก (เท่า/ใบ)</label>
+                <input type="number" id="pay-irish-correct" step="0.5" min="0.5" value="1">
+              </div>
+              <div class="input-mini">
+                <label for="pay-irish-wrong">ทายผิด (เท่า/ใบ)</label>
+                <input type="number" id="pay-irish-wrong" step="0.5" min="0.5" value="1">
+              </div>
+              <div class="input-mini">
+                <label for="pay-irish-bonus">โบนัสถูกหมด 4 ใบ</label>
+                <input type="number" id="pay-irish-bonus" step="1" min="0" value="0">
+              </div>
+            </div>
+          </div>
+
+          <div class="payout-subbox">
+            <h4>🖐️ ไพ่จริงหน้าวง & บาคาร่า (Real Cards & Baccarat)</h4>
+            <div class="payout-grid-3">
+              <div class="input-mini">
+                <label for="pay-rc-normal">Player / ปกติ (เท่า)</label>
+                <input type="number" id="pay-rc-normal" step="0.5" min="0.5" value="1">
+              </div>
+              <div class="input-mini">
+                <label for="pay-rc-banker">Banker เจ้า (เท่า)</label>
+                <input type="number" id="pay-rc-banker" step="0.05" min="0.5" value="0.95">
+              </div>
+              <div class="input-mini">
+                <label for="pay-rc-tie">Tie เสมอ (เท่า)</label>
+                <input type="number" id="pay-rc-tie" step="1" min="1" value="8">
               </div>
             </div>
           </div>

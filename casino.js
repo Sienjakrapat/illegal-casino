@@ -290,8 +290,16 @@
     payPdTong: document.getElementById('pay-pd-tong'),
     payBjNormal: document.getElementById('pay-bj-normal'),
     payBjBlackjack: document.getElementById('pay-bj-blackjack'),
+    payBjCharlie: document.getElementById('pay-bj-charlie'),
     blindSb: document.getElementById('blind-sb'),
     blindBb: document.getElementById('blind-bb'),
+    payPkRake: document.getElementById('pay-pk-rake'),
+    payIrishCorrect: document.getElementById('pay-irish-correct'),
+    payIrishWrong: document.getElementById('pay-irish-wrong'),
+    payIrishBonus: document.getElementById('pay-irish-bonus'),
+    payRcNormal: document.getElementById('pay-rc-normal'),
+    payRcBanker: document.getElementById('pay-rc-banker'),
+    payRcTie: document.getElementById('pay-rc-tie'),
     btnPunishVerbal: document.getElementById('btn-punish-verbal'),
     btnPunishRandom: document.getElementById('btn-punish-random'),
     adminPunishmentList: document.getElementById('admin-punishment-list'),
@@ -1192,22 +1200,29 @@
       const subGame = gs.subGame || state.settings?.realCardsSubGame || 'pokdeng';
       const pdPay = state.settings?.payouts?.pokdeng || {};
       const bjPay = state.settings?.payouts?.blackjack || {};
+      const rcPay = state.settings?.payouts?.realcards || {};
 
       let multPresets = [
-        { mult: pdPay.normal || 1, label: `1x (ปกติ)` },
+        { mult: pdPay.normal || 1, label: `${pdPay.normal || 1}x (ปกติ)` },
         { mult: pdPay.deng2 || 2, label: `${pdPay.deng2 || 2}x (2 เด้ง)` },
         { mult: pdPay.deng3 || 3, label: `${pdPay.deng3 || 3}x (3 เด้ง/เรียง/เซียน)` },
         { mult: pdPay.tong || 5, label: `${pdPay.tong || 5}x (ตอง)` }
       ];
       if (subGame === 'blackjack') {
         multPresets = [
-          { mult: bjPay.normal || 1, label: '1x (ชนะปกติ)' },
+          { mult: bjPay.normal || 1, label: `${bjPay.normal || 1}x (ชนะปกติ)` },
           { mult: bjPay.blackjack || 1.5, label: `${bjPay.blackjack || 1.5}x (Blackjack)` },
-          { mult: 2, label: '2x (Double)' }
+          { mult: bjPay.charlie5 || 2, label: `${bjPay.charlie5 || 2}x (5 ใบ/Double)` }
+        ];
+      } else if (subGame === 'baccarat') {
+        multPresets = [
+          { mult: rcPay.normal || 1, label: `${rcPay.normal || 1}x (Player)` },
+          { mult: rcPay.banker || 0.95, label: `${rcPay.banker || 0.95}x (Banker)` },
+          { mult: rcPay.tie || 8, label: `${rcPay.tie || 8}x (Tie เสมอ)` }
         ];
       } else if (subGame === 'custom') {
         multPresets = [
-          { mult: 1, label: '1x' },
+          { mult: rcPay.normal || 1, label: `${rcPay.normal || 1}x` },
           { mult: 1.5, label: '1.5x' },
           { mult: 2, label: '2x' },
           { mult: 3, label: '3x' },
@@ -1740,22 +1755,36 @@
 
       const payouts = {
         pokdeng: {
-          normal: Number(el.payPdNormal.value) || 1,
-          deng2: Number(el.payPdDeng2.value) || 2,
-          deng3: Number(el.payPdDeng3.value) || 3,
-          straight: Number(el.payPdStraight.value) || 3,
-          sian: Number(el.payPdSian.value) || 3,
-          tong: Number(el.payPdTong.value) || 5
+          normal: Number(el.payPdNormal?.value) || 1,
+          deng2: Number(el.payPdDeng2?.value) || 2,
+          deng3: Number(el.payPdDeng3?.value) || 3,
+          straight: Number(el.payPdStraight?.value) || 3,
+          sian: Number(el.payPdSian?.value) || 3,
+          tong: Number(el.payPdTong?.value) || 5
         },
         blackjack: {
-          normal: Number(el.payBjNormal.value) || 1,
-          blackjack: Number(el.payBjBlackjack.value) || 1.5
+          normal: Number(el.payBjNormal?.value) || 1,
+          blackjack: Number(el.payBjBlackjack?.value) || 1.5,
+          charlie5: Number(el.payBjCharlie?.value) || 2
+        },
+        poker: {
+          rakePercent: Number(el.payPkRake?.value) || 0
+        },
+        irishpoker: {
+          correct: Number(el.payIrishCorrect?.value) || 1,
+          wrong: Number(el.payIrishWrong?.value) || 1,
+          allCorrectBonus: Number(el.payIrishBonus?.value) || 0
+        },
+        realcards: {
+          normal: Number(el.payRcNormal?.value) || 1,
+          banker: Number(el.payRcBanker?.value) || 0.95,
+          tie: Number(el.payRcTie?.value) || 8
         }
       };
 
       const blinds = {
-        smallBlind: Number(el.blindSb.value) || 10,
-        bigBlind: Number(el.blindBb.value) || 20
+        smallBlind: Number(el.blindSb?.value) || 10,
+        bigBlind: Number(el.blindBb?.value) || 20
       };
 
       socket.emit(
@@ -1816,12 +1845,26 @@
     el.payPdTong.value = pd.tong ?? 5;
 
     const bj = state.settings?.payouts?.blackjack || {};
-    el.payBjNormal.value = bj.normal ?? 1;
-    el.payBjBlackjack.value = bj.blackjack ?? 1.5;
+    if (el.payBjNormal) el.payBjNormal.value = bj.normal ?? 1;
+    if (el.payBjBlackjack) el.payBjBlackjack.value = bj.blackjack ?? 1.5;
+    if (el.payBjCharlie) el.payBjCharlie.value = bj.charlie5 ?? 2;
 
     const blinds = state.settings?.blinds || {};
-    el.blindSb.value = blinds.smallBlind ?? 10;
-    el.blindBb.value = blinds.bigBlind ?? 20;
+    if (el.blindSb) el.blindSb.value = blinds.smallBlind ?? 10;
+    if (el.blindBb) el.blindBb.value = blinds.bigBlind ?? 20;
+
+    const pk = state.settings?.payouts?.poker || {};
+    if (el.payPkRake) el.payPkRake.value = pk.rakePercent ?? 0;
+
+    const irish = state.settings?.payouts?.irishpoker || {};
+    if (el.payIrishCorrect) el.payIrishCorrect.value = irish.correct ?? 1;
+    if (el.payIrishWrong) el.payIrishWrong.value = irish.wrong ?? 1;
+    if (el.payIrishBonus) el.payIrishBonus.value = irish.allCorrectBonus ?? 0;
+
+    const rc = state.settings?.payouts?.realcards || {};
+    if (el.payRcNormal) el.payRcNormal.value = rc.normal ?? 1;
+    if (el.payRcBanker) el.payRcBanker.value = rc.banker ?? 0.95;
+    if (el.payRcTie) el.payRcTie.value = rc.tie ?? 8;
 
     // Punishment settings
     clientState.adminDraftPunishmentMode = state.settings?.punishmentMode || 'verbal';
