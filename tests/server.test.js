@@ -141,7 +141,7 @@ test('Socket.IO admin mint, settings update, dealer mode, and error handling', a
     // 6. Draw punishment and acknowledge bankruptcy
     const drawPromise = waitForEvent(clientPlayer, 'punishment:drawn');
     const drawAckPromise = new Promise(res => {
-      clientAdmin.emit('punishment:draw', { roomCode, playerId }, res);
+      clientPlayer.emit('punishment:draw', { roomCode, playerId }, res);
     });
     const [drawnEvent, drawAck] = await Promise.all([drawPromise, drawAckPromise]);
     assert.equal(drawAck.ok, true);
@@ -155,6 +155,121 @@ test('Socket.IO admin mint, settings update, dealer mode, and error handling', a
   } finally {
     clientAdmin.close();
     clientPlayer.close();
+    httpServer.close();
+  }
+});
+
+test('Socket identity verification blocks playerId spoofing and mid-round state overwrites', async () => {
+  const { httpServer } = createCasinoServer();
+  await new Promise(resolve => httpServer.listen(0, resolve));
+  const port = httpServer.address().port;
+
+  const client1 = Client(`http://localhost:${port}`);
+  const client2 = Client(`http://localhost:${port}`);
+
+  try {
+    const createRes = await new Promise(r => client1.emit('room:create', { hostName: 'Admin', playerId: 'p1', initialChips: 1000 }, r));
+    const roomCode = createRes.roomCode;
+    await new Promise(r => client2.emit('room:join', { roomCode, playerName: 'Attacker', playerId: 'p2' }, r));
+
+    // 1. client2 attempts to spoof admin 'p1' in admin:mint
+    const spoofMint = await new Promise(r => client2.emit('admin:mint', {
+      roomCode,
+      playerId: 'p1',
+      targetPlayerId: 'p2',
+      amount: 9999
+    }, r));
+    assert.equal(spoofMint.ok, false);
+    assert.match(spoofMint.error, /Socket identity mismatch/);
+
+    // 2. Start round and place bet
+    const startRes = await new Promise(r => client1.emit('game:startRound', { roomCode, playerId: 'p1' }, r));
+    assert.equal(startRes.ok, true);
+
+    await new Promise(r => client1.emit('game:placeBet', { roomCode, playerId: 'p1', amount: 100 }, r));
+    await new Promise(r => client2.emit('game:placeBet', { roomCode, playerId: 'p2', amount: 100 }, r));
+
+    // Mid-betting (with bets placed): game:startRound and activeGame switch must be rejected
+    const restartMidBet = await new Promise(r => client1.emit('game:startRound', { roomCode, playerId: 'p1' }, r));
+    assert.equal(restartMidBet.ok, false);
+    assert.match(restartMidBet.error, /ไม่สามารถเริ่มตาใหม่หรือสลับเกมระหว่างที่กำลังเล่นอยู่ได้/);
+
+    const switchMidBet = await new Promise(r => client1.emit('admin:updateSettings', {
+      roomCode,
+      playerId: 'p1',
+      activeGame: 'blackjack'
+    }, r));
+    assert.equal(switchMidBet.ok, false);
+    assert.match(switchMidBet.error, /ไม่สามารถเริ่มตาใหม่หรือสลับเกมระหว่างที่กำลังเล่นอยู่ได้/);
+
+    // 3. Human dealer permission for deal action
+    // First finish current round or reset to auto dealer? Wait, we are in BETTING with bets placed!
+    // Let's deal this round in auto mode first:
+    const dealAuto = await new Promise(r => client1.emit('game:action', { roomCode, playerId: 'p1', action: 'deal' }, r));
+    assert.equal(dealAuto.ok, true);
+  } finally {
+    client1.close();
+    client2.close();
+    httpServer.close();
+  }
+});
+
+test('Human dealer deal permission, Blackjack hole card masking for human dealer, and empty punishment fallback', async () => {
+  const { httpServer, roomManager } = createCasinoServer();
+  await new Promise(resolve => httpServer.listen(0, resolve));
+  const port = httpServer.address().port;
+
+  const client1 = Client(`http://localhost:${port}`);
+  const client2 = Client(`http://localhost:${port}`);
+
+  try {
+    const createRes = await new Promise(r => client1.emit('room:create', { hostName: 'DealerP1', playerId: 'p1', initialChips: 1000 }, r));
+    const roomCode = createRes.roomCode;
+    await new Promise(r => client2.emit('room:join', { roomCode, playerName: 'PlayerP2', playerId: 'p2' }, r));
+
+    // Set p1 as human dealer and switch to blackjack
+    await new Promise(r => client1.emit('dealer:set', { roomCode, playerId: 'p1', mode: 'player', rounds: 3 }, r));
+    await new Promise(r => client1.emit('admin:updateSettings', {
+      roomCode,
+      playerId: 'p1',
+      activeGame: 'blackjack',
+      punishments: []
+    }, r));
+
+    // Verify empty punishment list falls back to DEFAULT_PUNISHMENTS
+    const drawRes = await new Promise(r => client1.emit('punishment:draw', { roomCode, playerId: 'p1' }, r));
+    assert.equal(drawRes.ok, true);
+    assert.ok(drawRes.draw.text.length > 0);
+
+    await new Promise(r => client1.emit('game:startRound', { roomCode, playerId: 'p1' }, r));
+    await new Promise(r => client2.emit('game:placeBet', { roomCode, playerId: 'p2', amount: 100 }, r));
+
+    // Non-dealer p2 cannot trigger 'deal' when p1 is human dealer
+    const badDeal = await new Promise(r => client2.emit('game:action', { roomCode, playerId: 'p2', action: 'deal' }, r));
+    assert.equal(badDeal.ok, false);
+    assert.match(badDeal.error, /เฉพาะเจ้ามือเท่านั้นที่สามารถกดแจกไพ่ได้/);
+
+    // Human dealer p1 in Blackjack PLAYER_TURN should NOT see their own hole card until DEALER_TURN
+    const room = roomManager.getRoom(roomCode);
+    room.gameState.phase = 'PLAYER_TURN';
+    room.gameState.dealerHand = {
+      cards: [{ rank: '10', suit: '♠' }, { rank: '9', suit: '♥', hidden: true }],
+      total: 19,
+      isBlackjack: false,
+      isBust: false,
+      isSoft: false,
+      label: '19 แต้ม',
+      revealed: false
+    };
+    const dealerBjView = roomManager.getSanitizedRoomState(room, 'p1');
+    assert.equal(dealerBjView.gameState.dealerHand.cards[0].rank, '10');
+    assert.equal(dealerBjView.gameState.dealerHand.cards[1].hidden, true);
+    assert.equal(dealerBjView.gameState.dealerHand.cards[1].rank, undefined);
+    assert.equal(dealerBjView.gameState.dealerHand.total, undefined);
+    assert.equal(dealerBjView.gameState.dealerHand.label, undefined);
+  } finally {
+    client1.close();
+    client2.close();
     httpServer.close();
   }
 });

@@ -335,16 +335,24 @@ class PokDengEngine {
       if (hand.cards.length >= 3) {
         throw new Error('ไม่สามารถจั่วเพิ่มได้อีก');
       }
-      const newCard = this.room.gameState.deck.shift();
-      hand.cards.push(newCard);
-      const ev = evaluatePokDengHand(hand.cards, payouts);
-      hand.points = ev.points;
-      hand.type = ev.type;
-      hand.multiplier = ev.multiplier;
-      hand.rankWeight = ev.rankWeight;
-      hand.label = ev.label;
-      hand.done = true;
+      const newCard = this.room.gameState.deck?.shift();
+      if (!newCard) {
+        hand.stood = true;
+        hand.done = true;
+      } else {
+        hand.cards.push(newCard);
+        const ev = evaluatePokDengHand(hand.cards, payouts);
+        hand.points = ev.points;
+        hand.type = ev.type;
+        hand.multiplier = ev.multiplier;
+        hand.rankWeight = ev.rankWeight;
+        hand.label = ev.label;
+        hand.done = true;
+      }
     } else if (action === 'stand') {
+      if (hand.points < 4 && (this.room.gameState.deck?.length || 0) > 0) {
+        throw new Error('แต้มน้อยกว่า 4 บังคับจั่วไพ่เพิ่ม!');
+      }
       hand.stood = true;
       hand.done = true;
     } else {
@@ -359,16 +367,25 @@ class PokDengEngine {
       this.room.gameState.phase = 'DEALER_TURN';
       if (this.room.dealer.mode === 'auto') {
         if (this.room.gameState.dealerHand.points < 5 && this.room.gameState.dealerHand.cards.length === 2) {
-          const newCard = this.room.gameState.deck.shift();
-          this.room.gameState.dealerHand.cards.push(newCard);
-          const ev = evaluatePokDengHand(this.room.gameState.dealerHand.cards, payouts);
-          this.room.gameState.dealerHand.points = ev.points;
-          this.room.gameState.dealerHand.type = ev.type;
-          this.room.gameState.dealerHand.multiplier = ev.multiplier;
-          this.room.gameState.dealerHand.rankWeight = ev.rankWeight;
-          this.room.gameState.dealerHand.label = ev.label;
+          const newCard = this.room.gameState.deck?.shift();
+          if (newCard) {
+            this.room.gameState.dealerHand.cards.push(newCard);
+            const ev = evaluatePokDengHand(this.room.gameState.dealerHand.cards, payouts);
+            this.room.gameState.dealerHand.points = ev.points;
+            this.room.gameState.dealerHand.type = ev.type;
+            this.room.gameState.dealerHand.multiplier = ev.multiplier;
+            this.room.gameState.dealerHand.rankWeight = ev.rankWeight;
+            this.room.gameState.dealerHand.label = ev.label;
+          } else {
+            this.room.gameState.dealerHand.stood = true;
+            this.room.gameState.dealerHand.done = true;
+          }
         }
         this.settleRound();
+      } else if (this.room.gameState.dealerHand && Array.isArray(this.room.gameState.dealerHand.cards)) {
+        for (const card of this.room.gameState.dealerHand.cards) {
+          delete card.hidden;
+        }
       }
     }
 
@@ -391,14 +408,19 @@ class PokDengEngine {
 
     if (action === 'draw') {
       if (this.room.gameState.dealerHand.cards.length === 2) {
-        const newCard = this.room.gameState.deck.shift();
-        this.room.gameState.dealerHand.cards.push(newCard);
-        const ev = evaluatePokDengHand(this.room.gameState.dealerHand.cards, payouts);
-        this.room.gameState.dealerHand.points = ev.points;
-        this.room.gameState.dealerHand.type = ev.type;
-        this.room.gameState.dealerHand.multiplier = ev.multiplier;
-        this.room.gameState.dealerHand.rankWeight = ev.rankWeight;
-        this.room.gameState.dealerHand.label = ev.label;
+        const newCard = this.room.gameState.deck?.shift();
+        if (newCard) {
+          this.room.gameState.dealerHand.cards.push(newCard);
+          const ev = evaluatePokDengHand(this.room.gameState.dealerHand.cards, payouts);
+          this.room.gameState.dealerHand.points = ev.points;
+          this.room.gameState.dealerHand.type = ev.type;
+          this.room.gameState.dealerHand.multiplier = ev.multiplier;
+          this.room.gameState.dealerHand.rankWeight = ev.rankWeight;
+          this.room.gameState.dealerHand.label = ev.label;
+        } else {
+          this.room.gameState.dealerHand.stood = true;
+          this.room.gameState.dealerHand.done = true;
+        }
       }
     } else if (action === 'stand') {
       this.room.gameState.dealerHand.stood = true;

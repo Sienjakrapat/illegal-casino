@@ -320,5 +320,23 @@ test('PokDengEngine error handling and edge cases', () => {
   engine.dealerAction('draw'); // Dealer draws 2♦ -> 2+2+2 = 6 pts (ตอง 2!)
   assert.equal(room.gameState.phase, 'SETTLED');
   assert.equal(room.gameState.dealerHand.type, 'TONG');
+
+  // Mandatory draw on < 4 points and empty deck guard
+  rm.mintChips({ roomCode: room.code, adminPlayerId: 'p1', targetPlayerId: 'p2', amount: 500 });
+  engine.startBetting();
+  engine.placeBet('p2', 100);
+  engine.dealRound([
+    { rank: 'A', suit: '♠', value: 1 }, // p2 c1
+    { rank: '2', suit: '♣', value: 2 }, // dealer c1
+    { rank: '2', suit: '♦', value: 2 }, // p2 c2 (3 pts < 4)
+    { rank: '3', suit: '♥', value: 3 }, // dealer c2 (5 pts)
+    { rank: '4', suit: '♠', value: 4 }  // 1 card left in deck
+  ]);
+  assert.throws(() => engine.playerAction('p2', 'stand'), /แต้มน้อยกว่า 4 บังคับจั่วไพ่เพิ่ม/);
+  engine.playerAction('p2', 'draw');
+  assert.equal(room.gameState.phase, 'DEALER_TURN');
+  // Deck is now empty; human dealer attempting to draw safely stands and settles
+  engine.dealerAction('draw');
+  assert.equal(room.gameState.phase, 'SETTLED');
 });
 

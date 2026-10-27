@@ -14,6 +14,25 @@ function normalizeArgs(payload, callback) {
   return [payload || {}, typeof callback === 'function' ? callback : null];
 }
 
+function getAuthenticatedPlayer(room, socketId, playerId) {
+  if (!room) throw new Error('ไม่พบห้องที่ระบุ');
+  const player = room.players[playerId];
+  if (!player || player.socketId !== socketId) {
+    throw new Error('การยืนยันตัวตนไม่ถูกต้อง (Socket identity mismatch)');
+  }
+  return player;
+}
+
+function isRoundActivelyInProgress(room, allowEmptyBetting = false) {
+  if (!room || !room.gameState) return false;
+  const phase = room.gameState.phase;
+  if (['SETTLED', 'SHOWDOWN'].includes(phase)) return false;
+  if (allowEmptyBetting && phase === 'BETTING' && Object.keys(room.gameState.bets || {}).length === 0) {
+    return false;
+  }
+  return true;
+}
+
 /**
  * Creates and configures the Express and Socket.IO server.
  * @returns {{ app: express.Express, httpServer: http.Server, io: Server, roomManager: RoomManager }}
@@ -132,6 +151,8 @@ function createCasinoServer() {
       const [payload, callback] = normalizeArgs(rawPayload, rawCb);
       try {
         const { roomCode, playerId, targetPlayerId, amount } = payload;
+        const room = roomManager.getRoom(roomCode);
+        getAuthenticatedPlayer(room, socket.id, playerId);
         roomManager.mintChips({
           roomCode,
           adminPlayerId: playerId,
@@ -150,6 +171,7 @@ function createCasinoServer() {
       try {
         const { roomCode, playerId, payouts, blinds, punishmentMode, punishments, activeGame } = payload;
         const room = roomManager.getRoom(roomCode);
+        getAuthenticatedPlayer(room, socket.id, playerId);
         const prevGame = room?.settings?.activeGame;
 
         roomManager.updateSettings({
@@ -177,6 +199,8 @@ function createCasinoServer() {
       const [payload, callback] = normalizeArgs(rawPayload, rawCb);
       try {
         const { roomCode, playerId, mode, rounds } = payload;
+        const room = roomManager.getRoom(roomCode);
+        getAuthenticatedPlayer(room, socket.id, playerId);
         roomManager.setDealerMode({ roomCode, playerId, mode, rounds });
         broadcastRoomState(roomCode);
         callback?.({ ok: true });
@@ -188,10 +212,11 @@ function createCasinoServer() {
     socket.on('game:startRound', (rawPayload, rawCb) => {
       const [payload, callback] = normalizeArgs(rawPayload, rawCb);
       try {
-        const { roomCode } = payload;
+        const { roomCode, playerId } = payload;
         const room = roomManager.getRoom(roomCode);
-        if (!room) {
-          throw new Error('ไม่พบห้องที่ระบุ');
+        getAuthenticatedPlayer(room, socket.id, playerId);
+        if (isRoundActivelyInProgress(room, true)) {
+          throw new Error('ไม่สามารถเริ่มตาใหม่หรือสลับเกมระหว่างที่กำลังเล่นอยู่ได้');
         }
 
         const engine = getOrCreateEngine(roomCode);
@@ -216,6 +241,8 @@ function createCasinoServer() {
       const [payload, callback] = normalizeArgs(rawPayload, rawCb);
       try {
         const { roomCode, playerId, amount } = payload;
+        const room = roomManager.getRoom(roomCode);
+        getAuthenticatedPlayer(room, socket.id, playerId);
         const engine = getOrCreateEngine(roomCode);
         engine.placeBet(playerId, amount);
         broadcastRoomState(roomCode);
@@ -230,14 +257,15 @@ function createCasinoServer() {
       try {
         const { roomCode, playerId, action, amount } = payload;
         const room = roomManager.getRoom(roomCode);
-        if (!room) {
-          throw new Error('ไม่พบห้องที่ระบุ');
-        }
+        getAuthenticatedPlayer(room, socket.id, playerId);
 
         const engine = getOrCreateEngine(roomCode);
         const game = room.settings?.activeGame || 'pokdeng';
 
         if (action === 'deal' && (game === 'pokdeng' || game === 'blackjack')) {
+          if (room.dealer?.mode === 'player' && room.dealer?.playerId !== playerId) {
+            throw new Error('เฉพาะเจ้ามือเท่านั้นที่สามารถกดแจกไพ่ได้');
+          }
           engine.dealRound();
         } else if (game === 'pokdeng' || game === 'blackjack') {
           if (
@@ -266,6 +294,8 @@ function createCasinoServer() {
       const [payload, callback] = normalizeArgs(rawPayload, rawCb);
       try {
         const { roomCode, playerId } = payload;
+        const room = roomManager.getRoom(roomCode);
+        getAuthenticatedPlayer(room, socket.id, playerId);
         const draw = roomManager.drawPunishment({ roomCode, playerId });
         io.to(roomCode).emit('punishment:drawn', draw);
         broadcastRoomState(roomCode);
@@ -278,8 +308,11 @@ function createCasinoServer() {
     socket.on('punishment:ack', (rawPayload, rawCb) => {
       const [payload, callback] = normalizeArgs(rawPayload, rawCb);
       try {
-        const { roomCode, playerId } = payload;
-        roomManager.acknowledgeBankruptcy({ roomCode, playerId });
+        const { roomCode, playerId, targetPlayerId } = payload;
+        const room = roomManager.getRoom(roomCode);
+        getAuthenticatedPlayer(room, socket.id, playerId);
+        const ackTarget = targetPlayerId !== undefined ? targetPlayerId : playerId;
+        roomManager.acknowledgeBankruptcy({ roomCode, playerId: ackTarget });
         broadcastRoomState(roomCode);
         callback?.({ ok: true });
       } catch (err) {

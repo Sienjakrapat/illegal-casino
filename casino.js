@@ -113,18 +113,32 @@
   const STORAGE_PLAYER_ID = 'casino_player_id';
   const STORAGE_PLAYER_NAME = 'casino_player_name';
 
+  function safeGetStorage(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function safeSetStorage(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (_) {}
+  }
+
   function getOrCreatePlayerId() {
-    let id = localStorage.getItem(STORAGE_PLAYER_ID);
+    let id = safeGetStorage(STORAGE_PLAYER_ID);
     if (!id) {
       id = 'p_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
-      localStorage.setItem(STORAGE_PLAYER_ID, id);
+      safeSetStorage(STORAGE_PLAYER_ID, id);
     }
     return id;
   }
 
   const clientState = {
     playerId: getOrCreatePlayerId(),
-    playerName: localStorage.getItem(STORAGE_PLAYER_NAME) || '',
+    playerName: safeGetStorage(STORAGE_PLAYER_NAME) || '',
     roomCode: null,
     roomState: null,
     draftBet: 100,
@@ -317,7 +331,7 @@
   function savePlayerName() {
     const name = el.inputPlayerName.value.trim() || 'เสี่ยนิรนาม';
     clientState.playerName = name;
-    localStorage.setItem(STORAGE_PLAYER_NAME, name);
+    safeSetStorage(STORAGE_PLAYER_NAME, name);
     return name;
   }
 
@@ -736,6 +750,9 @@
         return;
       }
 
+      const isPlayerDealerMode = state.dealer?.mode === 'player';
+      const canDealInAuto = !isPlayerDealerMode && (currentPlacedBet > 0 || you.isAdmin);
+
       el.actionControlsDock.innerHTML = `
         <div class="chip-bet-bar">
           <button type="button" class="chip-btn" data-add-chip="50">+50</button>
@@ -748,9 +765,11 @@
           <button type="button" id="btn-confirm-bet" class="btn-neon btn-primary">
             🪙 ยืนยันเดิมพัน (${formatChips(clientState.draftBet)})
           </button>
-          <button type="button" id="btn-deal-cards" class="btn-neon btn-gold">
-            🃏 แจกไพ่ ${currentPlacedBet > 0 ? '✓' : ''}
-          </button>
+          ${canDealInAuto ? `
+            <button type="button" id="btn-deal-cards" class="btn-neon btn-gold">
+              🃏 แจกไพ่ ${currentPlacedBet > 0 ? '✓' : ''}
+            </button>
+          ` : ''}
         </div>
       `;
 
@@ -995,14 +1014,21 @@
 
     el.btnCopyRoomLink.addEventListener('click', () => {
       const url = el.shareRoomUrl.value;
+      const fallbackCopy = () => {
+        try {
+          el.shareRoomUrl.select();
+          document.execCommand('copy');
+          showToast('คัดลอกลิงก์ชวนเพื่อนเรียบร้อย!');
+        } catch (_) {
+          showToast('ไม่สามารถคัดลอกลิงก์ได้', true);
+        }
+      };
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(() => {
           showToast('คัดลอกลิงก์ชวนเพื่อนเรียบร้อย!');
-        });
+        }).catch(fallbackCopy);
       } else {
-        el.shareRoomUrl.select();
-        document.execCommand('copy');
-        showToast('คัดลอกลิงก์ชวนเพื่อนเรียบร้อย!');
+        fallbackCopy();
       }
     });
 
@@ -1244,7 +1270,7 @@
       if (!socket || !clientState.roomCode) return;
       socket.emit(
         'punishment:ack',
-        { roomCode: clientState.roomCode, playerId: null },
+        { roomCode: clientState.roomCode, playerId: clientState.playerId, targetPlayerId: null },
         res => {
           if (!res?.ok) showToast(res?.error || 'ไม่สามารถปิดหน้าต่างได้', true);
         }

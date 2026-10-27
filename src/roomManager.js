@@ -181,6 +181,9 @@ class RoomManager {
     }
     if (activeGame) {
       if (room.settings.activeGame !== activeGame) {
+        if (this.isRoundInProgress(room)) {
+          throw new Error('ไม่สามารถเริ่มตาใหม่หรือสลับเกมระหว่างที่กำลังเล่นอยู่ได้');
+        }
         room.settings.activeGame = activeGame;
         room.gameState = null;
       }
@@ -188,9 +191,20 @@ class RoomManager {
     return room;
   }
 
+  isRoundInProgress(room) {
+    if (!room || !room.gameState || !room.gameState.phase) return false;
+    const phase = room.gameState.phase;
+    if (['SETTLED', 'SHOWDOWN'].includes(phase)) return false;
+    if (phase === 'BETTING' && Object.keys(room.gameState.bets || {}).length === 0) return false;
+    return true;
+  }
+
   setDealerMode({ roomCode, playerId, mode, rounds }) {
     const room = this.getRoom(roomCode);
     if (!room) throw new Error('ไม่พบห้องที่ระบุ');
+    if (this.isRoundInProgress(room)) {
+      throw new Error('ไม่สามารถเริ่มตาใหม่หรือสลับเกมระหว่างที่กำลังเล่นอยู่ได้');
+    }
 
     if (mode === 'auto') {
       room.dealer = {
@@ -354,7 +368,7 @@ class RoomManager {
         player.isBankrupt = true;
         const alreadyListed = room.activeBankruptcies.some(b => b.playerId === player.playerId);
         if (!alreadyListed) {
-          const punishments = room.settings?.punishments || DEFAULT_PUNISHMENTS;
+          const punishments = (room.settings?.punishments?.length > 0) ? room.settings.punishments : DEFAULT_PUNISHMENTS;
           const punishment = punishments[Math.floor(Math.random() * punishments.length)] || 'หมดตูด! ดื่ม 1 ช็อต 🥃';
           room.activeBankruptcies.push({
             playerId: player.playerId,
@@ -372,7 +386,7 @@ class RoomManager {
     if (!room) throw new Error('ไม่พบห้องที่ระบุ');
     const player = room.players[playerId];
     const playerName = player?.name || 'ผู้เล่น';
-    const list = room.settings?.punishments || DEFAULT_PUNISHMENTS;
+    const list = (room.settings?.punishments?.length > 0) ? room.settings.punishments : DEFAULT_PUNISHMENTS;
     const idx = Math.floor(rng() * list.length);
     const text = list[idx] || list[0];
     const result = {
@@ -434,7 +448,8 @@ class RoomManager {
       if (cloned.gameState.dealerHand) {
         const isViewerDealer = room.dealer.mode === 'player' && room.dealer.playerId === viewerPlayerId;
         const dh = cloned.gameState.dealerHand;
-        if (!isViewerDealer && !dh.revealed) {
+        const isBjPlayerTurn = cloned.gameState.game === 'blackjack' && cloned.gameState.phase === 'PLAYER_TURN';
+        if ((!isViewerDealer || isBjPlayerTurn) && !dh.revealed) {
           if (Array.isArray(dh.cards)) {
             dh.cards = dh.cards.map(c => (c.hidden ? { hidden: true } : c));
           }
