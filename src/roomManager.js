@@ -417,6 +417,15 @@ class RoomManager {
             if (Array.isArray(hand.cards)) {
               hand.cards = hand.cards.map(() => ({ hidden: true }));
             }
+            delete hand.points;
+            delete hand.type;
+            delete hand.label;
+            delete hand.multiplier;
+            delete hand.rankWeight;
+            delete hand.total;
+            delete hand.isBlackjack;
+            delete hand.isSoft;
+            delete hand.isBust;
           }
         }
       }
@@ -429,6 +438,15 @@ class RoomManager {
           if (Array.isArray(dh.cards)) {
             dh.cards = dh.cards.map(c => (c.hidden ? { hidden: true } : c));
           }
+          delete dh.points;
+          delete dh.type;
+          delete dh.label;
+          delete dh.multiplier;
+          delete dh.rankWeight;
+          delete dh.total;
+          delete dh.isBlackjack;
+          delete dh.isSoft;
+          delete dh.isBust;
         }
       }
 
@@ -442,6 +460,8 @@ class RoomManager {
             if (Array.isArray(p.cards)) {
               p.cards = p.cards.map(() => ({ hidden: true }));
             }
+            delete p.hand;
+            delete p.evaluation;
           }
         }
       }
