@@ -217,9 +217,12 @@ function createCasinoServer() {
       try {
         const { roomCode, playerId, activeGame, subGame } = payload;
         const room = roomManager.getRoom(roomCode);
-        getAuthenticatedPlayer(room, socket.id, playerId);
+        const player = getAuthenticatedPlayer(room, socket.id, playerId);
 
         if (activeGame && activeGame !== room.settings.activeGame) {
+          if (!player.isAdmin) {
+            throw new Error('เฉพาะ Admin เท่านั้นที่สามารถสลับเกมใน Admin Panel ได้');
+          }
           if (!['pokdeng', 'blackjack', 'poker', 'realcards'].includes(activeGame)) {
             throw new Error(`ไม่รองรับเกม: ${activeGame}`);
           }

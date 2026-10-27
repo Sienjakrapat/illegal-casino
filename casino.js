@@ -6,7 +6,15 @@
 (function () {
   'use strict';
 
-  // ================= WEB AUDIO SYNTHESIZER (ZERO-DEPENDENCY) =================
+  // ================= WEB AUDIO SYNTHESIZER, HAPTICS & GAME JUICE =================
+  function triggerHaptic(pattern = 12) {
+    try {
+      if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+        navigator.vibrate(pattern);
+      }
+    } catch (_) {}
+  }
+
   class SoundSynth {
     constructor() {
       this.enabled = true;
@@ -27,7 +35,9 @@
       return this.ctx;
     }
 
+    // Crisp card slide & 3D flip whoosh
     playCardDeal() {
+      triggerHaptic(10);
       const ctx = this._ensureContext();
       if (!ctx) return;
       try {
@@ -35,58 +45,66 @@
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(520, now);
-        osc.frequency.exponentialRampToValueAtTime(180, now + 0.08);
+        osc.frequency.setValueAtTime(640, now);
+        osc.frequency.exponentialRampToValueAtTime(190, now + 0.085);
         gain.gain.setValueAtTime(0.18, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start(now);
-        osc.stop(now + 0.085);
+        osc.stop(now + 0.095);
       } catch (_) {}
     }
 
+    // Authentic porcelain/metallic casino chip clink
     playChipBet() {
+      triggerHaptic(14);
       const ctx = this._ensureContext();
       if (!ctx) return;
       try {
         const now = ctx.currentTime;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(1480, now);
-        osc.frequency.setValueAtTime(1960, now + 0.03);
-        gain.gain.setValueAtTime(0.15, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.12);
+        const tones = [1850, 2760];
+        tones.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.018);
+          osc.frequency.exponentialRampToValueAtTime(freq * 1.18, now + idx * 0.018 + 0.065);
+          gain.gain.setValueAtTime(0.13, now + idx * 0.018);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.018 + 0.095);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + idx * 0.018);
+          osc.stop(now + idx * 0.018 + 0.1);
+        });
       } catch (_) {}
     }
 
+    // Celebratory VIP Lounge payout chime
     playWinFanfare() {
+      triggerHaptic([20, 45, 30]);
       const ctx = this._ensureContext();
       if (!ctx) return;
       try {
-        const notes = [523.25, 659.25, 783.99, 1046.5];
+        const notes = [523.25, 659.25, 783.99, 1046.5, 1318.5];
         notes.forEach((freq, idx) => {
-          const now = ctx.currentTime + idx * 0.09;
+          const now = ctx.currentTime + idx * 0.075;
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.type = 'triangle';
           osc.frequency.setValueAtTime(freq, now);
-          gain.gain.setValueAtTime(0.18, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+          gain.gain.setValueAtTime(0.17, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
           osc.connect(gain);
           gain.connect(ctx.destination);
           osc.start(now);
-          osc.stop(now + 0.23);
+          osc.stop(now + 0.27);
         });
       } catch (_) {}
     }
 
     playBankruptcySiren() {
+      triggerHaptic([60, 40, 80]);
       const ctx = this._ensureContext();
       if (!ctx) return;
       try {
@@ -108,6 +126,62 @@
   }
 
   const sfx = new SoundSynth();
+
+  // Floating Golden Chip Confetti on Wins
+  function spawnWinConfetti() {
+    const container = document.getElementById('confetti-layer');
+    if (!container) return;
+    const count = 22;
+    for (let i = 0; i < count; i++) {
+      const chip = document.createElement('div');
+      chip.className = 'vip-confetti-chip';
+      const startX = 12 + Math.random() * 76;
+      const driftX = (Math.random() - 0.5) * 160;
+      const dur = 1250 + Math.random() * 750;
+      const spin = 360 + Math.floor(Math.random() * 720);
+      chip.style.left = startX + 'vw';
+      chip.style.setProperty('--drift-x', driftX.toFixed(0) + 'px');
+      chip.style.setProperty('--fall-dur', dur.toFixed(0) + 'ms');
+      chip.style.setProperty('--spin-deg', spin + 'deg');
+      chip.style.animationDelay = (Math.random() * 220).toFixed(0) + 'ms';
+      container.appendChild(chip);
+      setTimeout(() => chip.remove(), dur + 300);
+    }
+  }
+
+  // Dynamic Roll-Up Chip Counter Animation
+  let chipRollRaf = null;
+  function animateChipCounter(targetEl, fromVal, toVal) {
+    if (!targetEl) return;
+    if (fromVal === toVal || typeof requestAnimationFrame !== 'function') {
+      targetEl.textContent = formatChips(toVal);
+      return;
+    }
+    if (chipRollRaf) cancelAnimationFrame(chipRollRaf);
+    const badge = document.getElementById('hud-my-chips-badge');
+    if (badge) {
+      badge.classList.remove('chip-bump');
+      void badge.offsetWidth;
+      badge.classList.add('chip-bump');
+    }
+    const startTime = performance.now();
+    const duration = 420;
+    const diff = toVal - fromVal;
+
+    function step(now) {
+      const progress = Math.min(1, (now - startTime) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(fromVal + diff * eased);
+      targetEl.textContent = formatChips(current);
+      if (progress < 1) {
+        chipRollRaf = requestAnimationFrame(step);
+      } else {
+        targetEl.textContent = formatChips(toVal);
+        chipRollRaf = null;
+      }
+    }
+    chipRollRaf = requestAnimationFrame(step);
+  }
 
   // ================= CLIENT STATE & PERSISTENCE =================
   const STORAGE_PLAYER_ID = 'casino_player_id';
@@ -144,6 +218,7 @@
     draftBet: 100,
     draftMultiplier: 1,
     prevPhase: null,
+    prevMyChips: null,
     prevBankruptCount: 0,
     adminDraftPunishments: [],
     adminDraftPunishmentMode: 'verbal',
@@ -483,7 +558,12 @@
 
     const you = state.you || state.players?.[clientState.playerId];
     if (you) {
-      el.hudMyChips.textContent = formatChips(you.chips);
+      if (typeof clientState.prevMyChips === 'number' && clientState.prevMyChips !== you.chips) {
+        animateChipCounter(el.hudMyChips, clientState.prevMyChips, you.chips);
+      } else {
+        el.hudMyChips.textContent = formatChips(you.chips);
+      }
+      clientState.prevMyChips = you.chips;
       if (you.isAdmin) {
         el.btnOpenAdmin.classList.remove('hidden');
       } else {
@@ -611,7 +691,7 @@
 
       if (activeGame === 'realcards') {
         const bet = gs?.bets?.[pid];
-        if (bet > 0) badges.push(`<span class="mini-pill bet">เดิมพัน: ${formatChips(bet)}</span>`);
+        if (bet > 0) badges.push(`<span class="mini-pill bet"><span class="chip-stack-3d" aria-hidden="true"></span>เดิมพัน: ${formatChips(bet)}</span>`);
         else if (bet === 0) badges.push(`<span class="mini-pill">⏭️ ไม่ลงเดิมพัน</span>`);
         const out = gs?.outcomes?.[pid];
         if (out && out.label) {
@@ -625,7 +705,7 @@
         }
       } else if (activeGame === 'pokdeng' || activeGame === 'blackjack') {
         const bet = gs?.bets?.[pid];
-        if (bet > 0) badges.push(`<span class="mini-pill bet">เดิมพัน: ${formatChips(bet)}</span>`);
+        if (bet > 0) badges.push(`<span class="mini-pill bet"><span class="chip-stack-3d" aria-hidden="true"></span>เดิมพัน: ${formatChips(bet)}</span>`);
         else if (bet === 0) badges.push(`<span class="mini-pill">⏭️ ไม่ลงเดิมพัน</span>`);
         const hand = gs?.hands?.[pid];
         if (hand) {
@@ -646,7 +726,7 @@
 
         const pk = gs?.players?.[pid];
         if (pk) {
-          if (pk.currentBet > 0) badges.push(`<span class="mini-pill bet">ลง: ${formatChips(pk.currentBet)}</span>`);
+          if (pk.currentBet > 0) badges.push(`<span class="mini-pill bet"><span class="chip-stack-3d" aria-hidden="true"></span>ลง: ${formatChips(pk.currentBet)}</span>`);
           if (pk.folded) badges.push(`<span class="mini-pill lose">หมอบ (Fold)</span>`);
           if (pk.allIn) badges.push(`<span class="mini-pill bankrupt">🔥 All-in</span>`);
           const evalName = gs?.results?.handDetails?.[pid]?.name;
@@ -710,7 +790,7 @@
     if (activeGame === 'realcards') {
       const myBet = gs?.bets?.[myId];
       if (myBet > 0) {
-        el.ownBetBadge.textContent = `เดิมพัน: ${formatChips(myBet)}`;
+        el.ownBetBadge.innerHTML = `<span class="chip-stack-3d" aria-hidden="true"></span>เดิมพัน: ${formatChips(myBet)}`;
         el.ownBetBadge.classList.remove('hidden');
       } else if (myBet === 0) {
         el.ownBetBadge.textContent = '⏭️ ไม่ลงเดิมพันตานี้';
@@ -737,7 +817,7 @@
       }
       const myBet = gs?.bets?.[myId];
       if (myBet > 0) {
-        el.ownBetBadge.textContent = `เดิมพัน: ${formatChips(myBet)}`;
+        el.ownBetBadge.innerHTML = `<span class="chip-stack-3d" aria-hidden="true"></span>เดิมพัน: ${formatChips(myBet)}`;
         el.ownBetBadge.classList.remove('hidden');
       } else if (myBet === 0) {
         el.ownBetBadge.textContent = '⏭️ ไม่ลงเดิมพันตานี้';
@@ -765,7 +845,7 @@
         el.ownStatusBadge.classList.remove('hidden');
       }
       if (pk?.totalBet > 0) {
-        el.ownBetBadge.textContent = `ลงรวม: ${formatChips(pk.totalBet)}`;
+        el.ownBetBadge.innerHTML = `<span class="chip-stack-3d" aria-hidden="true"></span>ลงรวม: ${formatChips(pk.totalBet)}`;
         el.ownBetBadge.classList.remove('hidden');
       }
       const winAmt = gs?.results?.payouts?.[myId];
@@ -790,15 +870,9 @@
   function renderActionButtons(state, you, activeGame, gs, isHumanDealer) {
     const myId = clientState.playerId;
 
-        // 1. IDLE or SETTLED or SHOWDOWN -> Start New Round & Quick Mode Switch
+        // 1. IDLE or SETTLED or SHOWDOWN -> Start New Round button
     if (!gs || gs.phase === 'SETTLED' || gs.phase === 'SHOWDOWN') {
       el.actionControlsDock.innerHTML = `
-        <div class="chip-bet-bar" style="margin-bottom:0.4rem;">
-          <button type="button" class="chip-btn ${activeGame === 'pokdeng' ? 'chip-allin' : ''}" data-quick-mode="pokdeng">🎴 ป๊อกเด้ง</button>
-          <button type="button" class="chip-btn ${activeGame === 'blackjack' ? 'chip-allin' : ''}" data-quick-mode="blackjack">🃏 แบล็คแจ็ค</button>
-          <button type="button" class="chip-btn ${activeGame === 'poker' ? 'chip-allin' : ''}" data-quick-mode="poker">♠️ โป๊กเกอร์</button>
-          <button type="button" class="chip-btn ${activeGame === 'realcards' ? 'chip-allin' : ''}" data-quick-mode="realcards">🖐️ ไพ่ของจริง</button>
-        </div>
         <div class="action-btn-row">
           <button type="button" id="btn-start-round" class="btn-neon btn-gold btn-block">
             🚀 เริ่มตาใหม่ (${activeGame === 'realcards' ? 'โหมดไพ่ของจริง' : 'Start Round'})
@@ -810,19 +884,6 @@
           ` : ''}
         </div>
       `;
-      el.actionControlsDock.querySelectorAll('[data-quick-mode]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const targetMode = btn.dataset.quickMode;
-          socket.emit('game:switchMode', {
-            roomCode: clientState.roomCode,
-            playerId: myId,
-            activeGame: targetMode
-          }, res => {
-            if (!res?.ok) showToast(res?.error || 'สลับโหมดไม่สำเร็จ', true);
-            else showToast(`สลับเป็นโหมด ${btn.textContent.trim()} แล้ว!`);
-          });
-        });
-      });
       document.getElementById('btn-start-round')?.addEventListener('click', () => {
         emitGameStartRound();
       });
@@ -1592,6 +1653,10 @@
       animatePunishmentWheel(draw);
     });
   }
+
+  document.addEventListener('dblclick', e => {
+    e.preventDefault();
+  }, { passive: false });
 
   initLobby();
   initModals();

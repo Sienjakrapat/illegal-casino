@@ -1,48 +1,53 @@
 /* ==========================================================================
-   คาสิโนเถื่อน (Underground Neon Party Casino) — Mobile-First Stylesheet
-   Polished with ui-skills:
-   - ibelick/baseline-ui (typography, tabular-nums, z-index scale, reduced-motion)
-   - emilkowalski/mobile-native (dvh, safe-area-inset, touch-action, overscroll, hover media gate)
-   - ibelick/fixing-motion-performance (compositor-only animations, bounded blur <=8px)
-   - jakubkrehel/better-ui (concentric border-radius, 0.96 active press scale, 150ms ease-out)
+   คาสิโนเถื่อน — Las Vegas VIP Lounge 3D Edition
+   1. 3D Casino Table Felt (#065f46 -> #022c22), Padded Leather Rail & Gold Foil Rings
+   2. Realistic 3D Linen Playing Cards (rotateY 60fps flip) & Striped Stacked Poker Chips
+   3. Smoked Glassmorphism (rgba(13, 17, 28, 0.78), blur(16px)) & Specular Micro-Borders
+   4. Confetti Celebrations, Roll-up Counters & Mobile-First Touch Ergonomics
    ========================================================================== */
 
 :root {
-  --bg-obsidian: #090d16;
-  --bg-velvet: #111827;
-  --bg-glass: rgba(17, 24, 39, 0.92);
-  --felt-dark: #042f2e;
-  --felt-emerald: #064e3b;
-  --felt-glow: #059669;
+  --bg-obsidian: #070a12;
+  --bg-velvet: #0d111c;
+  --bg-smoked-glass: rgba(13, 17, 28, 0.78);
+  --bg-smoked-Write: rgba(13, 17, 28, 0.88);
 
-  --neon-gold: #f59e0b;
+  --felt-center: #065f46;
+  --felt-mid: #054433;
+  --felt-rim: #022c22;
+
+  --neon-gold: #d97706;
   --neon-gold-bright: #fbbf24;
-  --neon-crimson: #ef4444;
+  --gold-foil: rgba(251, 191, 36, 0.36);
+  --gold-foil- soft: rgba(251, 191, 36, 0.16);
+  --neon-crimson: #e11d48;
   --neon-emerald: #10b981;
   --neon-cyan: #06b6d4;
-  --neon-purple: #a855f7;
 
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  --border-subtle: rgba(255, 255, 255, 0.12);
-  --border-gold: rgba(245, 158, 11, 0.45);
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-gold: rgba(251, 191, 36, 0.38);
+  --inner-top-highlight: inset 0 1px 0 rgba(251, 191, 36, 0.26);
+  --inner-top-white: inset 0 1px 0 rgba(255, 255, 255, 0.14);
 
-  --card-white: #ffffff;
-  --suit-red: #dc2626;
+  --card-white: #fdfcfb;
+  --suit-red: #be123c;
   --suit-black: #0f172a;
 
   --font-thai: 'Kanit', sans-serif;
   --font-num: 'Chakra Petch', sans-serif;
 
-  /* Fixed z-index scale (baseline-ui) */
   --z-base: 1;
   --z-stage: 2;
   --z-hud: 20;
   --z-modal: 100;
   --z-overlay: 500;
+  --z-confetti: 900;
   --z-toast: 1000;
 
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 * {
@@ -50,6 +55,7 @@
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 html, body.casino-body {
@@ -63,7 +69,6 @@ html, body.casino-body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Interactive controls: prevent accidental text selection & 300ms tap delay (mobile-native) */
 button,
 [role="button"],
 .hud-badge,
@@ -79,7 +84,6 @@ button,
   touch-action: manipulation;
 }
 
-/* Headings & Body typography rules (baseline-ui) */
 h1, h2, h3, h4, .lobby-title, .bankruptcy-title {
   text-wrap: balance;
 }
@@ -88,7 +92,6 @@ p, .modal-desc, .table-status-banner {
   text-wrap: pretty;
 }
 
-/* Tabular numbers for all numeric/chip counters (baseline-ui) */
 .room-badge strong,
 .chips-badge,
 .pot-pill,
@@ -117,6 +120,43 @@ p, .modal-desc, .table-status-banner {
   text-align: center;
 }
 
+/* ================= CONFETTI CELEBRATION LAYER ================= */
+.confetti-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--z-confetti);
+  overflow: hidden;
+}
+
+.vip-confetti-chip {
+  position: absolute;
+  top: -32px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, #fbbf24 0 42%, transparent 43%),
+    conic-gradient(#d97706 0deg 45deg, #fffbeb 45deg 90deg, #d97706 90deg 135deg, #fffbeb 135deg 180deg, #d97706 180deg 225deg, #fffbeb 225deg 270deg, #d97706 270deg 315deg, #fffbeb 315deg 360deg);
+  border: 1px solid #fef3c7;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.55);
+  animation: confettiFall var(--fall-dur, 1600ms) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes confettiFall {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, -20px, 0) rotate(0deg) scale(0.8);
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--drift-x, 40px), 92dvh, 0) rotate(var(--spin-deg, 540deg)) scale(1);
+  }
+}
+
 /* ================= TOAST NOTIFICATIONS ================= */
 .toast-container {
   position: fixed;
@@ -132,12 +172,14 @@ p, .modal-desc, .table-status-banner {
 }
 
 .toast-item {
-  background: rgba(15, 23, 42, 0.96);
-  border: 1px solid var(--neon-gold);
+  background: var(--bg-smoked-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-gold);
+  box-shadow: var(--inner-top-highlight), 0 12px 28px -6px rgba(0, 0, 0, 0.78), 0 0 22px rgba(245, 158, 11, 0.14);
   color: var(--text-main);
   padding: 0.65rem 1rem;
   border-radius: 12px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.65);
   font-size: 0.92rem;
   font-weight: 600;
   text-align: center;
@@ -145,8 +187,9 @@ p, .modal-desc, .table-status-banner {
 }
 
 .toast-item.toast-error {
-  border-color: var(--neon-crimson);
-  color: #fecaca;
+  border-color: rgba(225, 29, 72, 0.65);
+  box-shadow: inset 0 1px 0 rgba(251, 113, 133, 0.35), 0 12px 28px -6px rgba(0, 0, 0, 0.8), 0 0 22px rgba(225, 29, 72, 0.22);
+  color: #fecdd3;
 }
 
 @keyframes toastSlideIn {
@@ -154,7 +197,7 @@ p, .modal-desc, .table-status-banner {
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* ================= LOBBY VIEW ================= */
+/* ================= LOBBY VIEW (LAS VEGAS VIP LOUNGE) ================= */
 .lobby-view {
   min-height: 100svh;
   display: flex;
@@ -164,46 +207,54 @@ p, .modal-desc, .table-status-banner {
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 15%, rgba(245, 158, 11, 0.14), transparent 55%),
-    radial-gradient(circle at 20% 80%, rgba(6, 78, 59, 0.32), transparent 55%),
+    radial-gradient(circle at 50% 10%, rgba(251, 191, 36, 0.16), transparent 52%),
+    radial-gradient(circle at 85% 85%, rgba(225, 29, 72, 0.12), transparent 50%),
+    radial-gradient(circle at 15% 80%, rgba(6, 95, 70, 0.32), transparent 55%),
     var(--bg-obsidian);
 }
 
 .lobby-card {
   width: 100%;
-  max-width: 420px;
-  background: var(--bg-glass);
-  backdrop-filter: blur(8px);
+  max-width: 425px;
+  background: var(--bg-smoked-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-gold);
   border-radius: 24px;
-  padding: 1.65rem 1.35rem;
-  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.78);
+  padding: 1.75rem 1.4rem;
+  box-shadow:
+    var(--inner-top-highlight),
+    0 24px 55px -12px rgba(0, 0, 0, 0.88),
+    0 0 38px rgba(245, 158, 11, 0.12);
   position: relative;
   z-index: var(--z-stage);
 }
 
 .lobby-header {
   text-align: center;
-  margin-bottom: 1.35rem;
+  margin-bottom: 1.4rem;
 }
 
 .neon-emblem {
-  font-size: 2.85rem;
+  font-size: 3rem;
   line-height: 1;
   margin-bottom: 0.35rem;
+  filter: drop-shadow(0 4px 12px rgba(251, 191, 36, 0.35));
 }
 
 .lobby-title {
-  font-size: 2.05rem;
+  font-size: 2.1rem;
   font-weight: 900;
-  color: var(--neon-gold-bright);
+  background: linear-gradient(180deg, #fffbeb 0%, #fde68a 45%, #d97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .lobby-subtitle {
   font-family: var(--font-num);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--text-muted);
-  margin-top: 0.2rem;
+  margin-top: 0.25rem;
 }
 
 .form-group {
@@ -212,7 +263,7 @@ p, .modal-desc, .table-status-banner {
 
 .form-group label {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   color: #cbd5e1;
   margin-bottom: 0.4rem;
   font-weight: 600;
@@ -220,8 +271,9 @@ p, .modal-desc, .table-status-banner {
 
 .neon-input, .neon-select {
   width: 100%;
-  background: rgba(9, 13, 22, 0.92);
-  border: 1.5px solid var(--border-subtle);
+  background: rgba(7, 10, 18, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.55);
   border-radius: 12px;
   padding: 0.72rem 0.95rem;
   color: var(--text-main);
@@ -232,28 +284,28 @@ p, .modal-desc, .table-status-banner {
 
 .neon-input:focus, .neon-select:focus {
   outline: none;
-  border-color: var(--neon-gold);
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.22);
+  border-color: var(--neon-gold-bright);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.55), 0 0 0 3px rgba(251, 191, 36, 0.2);
 }
 
 .code-input {
   font-family: var(--font-num);
-  font-size: 1.6rem;
+  font-size: 1.65rem;
   font-weight: 800;
   text-align: center;
   color: var(--neon-gold-bright);
 }
 
-/* Concentric border radius: outer 14px = inner 10px + 4px padding (better-ui) */
 .lobby-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.35rem;
-  background: rgba(9, 13, 22, 0.8);
+  background: rgba(7, 10, 18, 0.82);
   padding: 4px;
   border-radius: 14px;
   margin-bottom: 1.15rem;
   border: 1px solid var(--border-subtle);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6);
 }
 
 .lobby-tab {
@@ -270,9 +322,10 @@ p, .modal-desc, .table-status-banner {
 }
 
 .lobby-tab.active {
-  background: rgba(245, 158, 11, 0.2);
+  background: linear-gradient(180deg, rgba(251, 191, 36, 0.22), rgba(180, 83, 9, 0.28));
   color: var(--neon-gold-bright);
   border-color: var(--border-gold);
+  box-shadow: var(--inner-top-highlight);
 }
 
 .chip-preset-row {
@@ -283,8 +336,9 @@ p, .modal-desc, .table-status-banner {
 }
 
 .chip-preset-btn {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-subtle);
+  box-shadow: var(--inner-top-white);
   color: var(--text-main);
   font-family: var(--font-num);
   font-weight: 700;
@@ -295,21 +349,22 @@ p, .modal-desc, .table-status-banner {
 }
 
 .chip-preset-btn.active {
-  background: rgba(245, 158, 11, 0.24);
-  border-color: var(--neon-gold);
+  background: rgba(251, 191, 36, 0.22);
+  border-color: var(--neon-gold-bright);
   color: var(--neon-gold-bright);
+  box-shadow: var(--inner-top-highlight), 0 0 14px rgba(251, 191, 36, 0.18);
 }
 
-/* ================= BUTTONS & PRESS STATES (better-ui & baseline-ui) ================= */
+/* ================= VIP TACTILE BUTTONS (0.96 PRESS SCALE) ================= */
 .btn-neon {
   font-family: var(--font-thai);
   font-size: 0.96rem;
   font-weight: 700;
-  padding: 0.7rem 1.05rem;
+  padding: 0.72rem 1.05rem;
   border-radius: 12px;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: transform 150ms ease-out, background-color 150ms ease-out, opacity 150ms ease-out;
+  transition: transform 150ms ease-out, background-color 150ms ease-out, box-shadow 150ms ease-out, opacity 150ms ease-out;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -329,7 +384,7 @@ p, .modal-desc, .table-status-banner {
 }
 
 .btn-neon:disabled {
-  opacity: 0.45;
+  opacity: 0.42;
   cursor: not-allowed;
 }
 
@@ -338,54 +393,57 @@ p, .modal-desc, .table-status-banner {
 }
 
 .btn-primary {
-  background: #059669;
+  background: linear-gradient(180deg, #10b981 0%, #047857 100%);
   color: #ffffff;
-  border-color: rgba(16, 185, 129, 0.4);
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+  border-color: rgba(52, 211, 153, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 6px 18px -4px rgba(16, 185, 129, 0.45);
 }
 
 .btn-gold {
-  background: #f59e0b;
+  background: linear-gradient(180deg, #fcd34d 0%, #d97706 100%);
   color: #090d16;
-  border-color: #fbbf24;
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+  border-color: #fde68a;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 6px 20px -4px rgba(245, 158, 11, 0.45);
 }
 
 .btn-crimson {
-  background: #dc2626;
+  background: linear-gradient(180deg, #f43f5e 0%, #be123c 100%);
   color: #ffffff;
-  border-color: rgba(248, 113, 113, 0.4);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  border-color: rgba(251, 113, 133, 0.48);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 6px 18px -4px rgba(225, 29, 72, 0.45);
 }
 
 .btn-emerald {
-  background: #047857;
+  background: linear-gradient(180deg, #059669 0%, #064e3b 100%);
   color: #ffffff;
-  border-color: rgba(16, 185, 129, 0.45);
+  border-color: rgba(52, 211, 153, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 4px 14px rgba(5, 150, 105, 0.32);
 }
 
 .btn-outline {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: var(--inner-top-white);
   color: var(--text-main);
 }
 
-/* Gate hover effects behind hover-capable pointers (mobile-native & better-ui) */
 @media (hover: hover) and (pointer: fine) {
-  .btn-primary:hover:not(:disabled) { background: #10b981; }
-  .btn-gold:hover:not(:disabled) { background: #fbbf24; }
-  .btn-crimson:hover:not(:disabled) { background: #ef4444; }
-  .btn-outline:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }
-  .chip-btn:hover:not(:disabled) { filter: brightness(1.06); }
+  .btn-primary:hover:not(:disabled) { filter: brightness(1.07); }
+  .btn-gold:hover:not(:disabled) { filter: brightness(1.06); }
+  .btn-crimson:hover:not(:disabled) { filter: brightness(1.07); }
+  .btn-outline:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); border-color: var(--border-gold); }
+  .chip-btn:hover:not(:disabled) { transform: translateY(-2px); }
   .room-badge:hover, .dealer-badge:hover { border-color: var(--neon-gold-bright); }
 }
 
-/* ================= TABLE VIEW & TOP HUD ================= */
+/* ================= TABLE VIEW & SMOKED GLASS TOP HUD ================= */
 .table-view {
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: var(--bg-obsidian);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(251, 191, 36, 0.08), transparent 45%),
+    var(--bg-obsidian);
   overflow: hidden;
 }
 
@@ -395,8 +453,11 @@ p, .modal-desc, .table-status-banner {
   justify-content: space-between;
   gap: 0.4rem;
   padding: calc(0.45rem + env(safe-area-inset-top, 0px)) max(0.65rem, env(safe-area-inset-right, 0px)) 0.45rem max(0.65rem, env(safe-area-inset-left, 0px));
-  background: rgba(9, 13, 22, 0.96);
-  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-smoked-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(251, 191, 36, 0.22);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.65);
   z-index: var(--z-hud);
   flex-shrink: 0;
   flex-wrap: wrap;
@@ -412,8 +473,9 @@ p, .modal-desc, .table-status-banner {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: rgba(30, 41, 59, 0.85);
+  background: rgba(15, 23, 42, 0.78);
   border: 1px solid var(--border-subtle);
+  box-shadow: var(--inner-top-white);
   padding: 0.34rem 0.68rem;
   border-radius: 999px;
   font-size: 0.8rem;
@@ -424,7 +486,8 @@ p, .modal-desc, .table-status-banner {
 
 .room-badge {
   cursor: pointer;
-  border-color: rgba(245, 158, 11, 0.4);
+  border-color: rgba(251, 191, 36, 0.38);
+  box-shadow: var(--inner-top-highlight);
 }
 
 .room-badge strong {
@@ -434,31 +497,44 @@ p, .modal-desc, .table-status-banner {
 }
 
 .game-badge {
-  background: rgba(6, 78, 59, 0.65);
-  border-color: rgba(16, 185, 129, 0.45);
+  background: rgba(6, 78, 59, 0.55);
+  border-color: rgba(16, 185, 129, 0.42);
   color: #a7f3d0;
   font-weight: 600;
 }
 
 .dealer-badge {
   cursor: pointer;
-  background: rgba(30, 41, 59, 0.9);
-  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(30, 27, 46, 0.82);
+  border-color: rgba(251, 191, 36, 0.4);
+  box-shadow: var(--inner-top-highlight);
   color: #fde68a;
   font-weight: 600;
 }
 
 .chips-badge {
-  background: rgba(245, 158, 11, 0.16);
-  border-color: var(--neon-gold);
+  background: linear-gradient(180deg, rgba(251, 191, 36, 0.2), rgba(180, 83, 9, 0.18));
+  border-color: rgba(251, 191, 36, 0.55);
+  box-shadow: var(--inner-top-highlight), 0 0 14px rgba(251, 191, 36, 0.14);
   font-family: var(--font-num);
-  font-size: 0.92rem;
+  font-size: 0.94rem;
   color: var(--neon-gold-bright);
 }
 
+.chips-badge.chip-bump {
+  animation: chipCounterPulse 260ms var(--ease-out);
+}
+
+@keyframes chipCounterPulse {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.12); border-color: #fffbeb; }
+  100% { transform: scale(1); }
+}
+
 .hud-icon-btn {
-  background: rgba(30, 41, 59, 0.85);
+  background: rgba(15, 23, 42, 0.82);
   border: 1px solid var(--border-subtle);
+  box-shadow: var(--inner-top-white);
   color: var(--text-main);
   border-radius: 50%;
   width: 34px;
@@ -472,11 +548,12 @@ p, .modal-desc, .table-status-banner {
 }
 
 .hud-admin-btn {
-  background: var(--neon-gold);
+  background: linear-gradient(180deg, #fcd34d 0%, #d97706 100%);
   color: #090d16;
-  border: none;
+  border: 1px solid #fde68a;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 2px 10px rgba(245, 158, 11, 0.35);
   border-radius: 999px;
-  padding: 0.36rem 0.78rem;
+  padding: 0.35rem 0.78rem;
   font-family: var(--font-thai);
   font-size: 0.78rem;
   font-weight: 800;
@@ -484,35 +561,66 @@ p, .modal-desc, .table-status-banner {
   transition: transform 150ms ease-out;
 }
 
-/* ================= EMERALD FELT TABLE STAGE ================= */
+/* ================= 1. 3D CASINO TABLE FELT & PADDED LEATHER RAIL ================= */
 .casino-table-stage {
   flex: 1;
   min-height: 0;
-  padding: 0.45rem;
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   overscroll-behavior: contain;
+  perspective: 1000px;
 }
 
 .emerald-felt-table {
   flex: 1;
+  /* Rich emerald green center (#065f46) blending into deep dark shadows at the rim (#022c22) + fine micro-weave felt texture */
   background:
-    radial-gradient(ellipse at center, #065f46 0%, #064e3b 58%, #022c22 100%);
-  border: 3px solid #27272a;
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.012) 0px,
+      rgba(255, 255, 255, 0.012) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(0, 0, 0, 0.08) 0px,
+      rgba(0, 0, 0, 0.08) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    radial-gradient(ellipse at 50% 42%, var(--felt-center) 0%, var(--felt-mid) 56%, var(--felt-rim) 100%);
+  /* 3D Padded Dark Leather Armrest/Rail with brass inner rim */
+  border: 9px solid #1a120e;
   box-shadow:
-    inset 0 0 36px rgba(0, 0, 0, 0.72),
-    0 0 0 1px rgba(245, 158, 11, 0.32),
-    0 10px 25px rgba(0, 0, 0, 0.6);
-  border-radius: 26px;
-  padding: 0.7rem;
+    inset 0 0 0 1.5px rgba(251, 191, 36, 0.42),
+    inset 0 10px 28px rgba(0, 0, 0, 0.75),
+    inset 0 0 65px rgba(1, 18, 14, 0.88),
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 0 3px #0c0908,
+    0 16px 38px rgba(0, 0, 0, 0.85);
+  border-radius: 34px;
+  padding: 0.78rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   position: relative;
   overflow-y: auto;
   overscroll-behavior: contain;
-  gap: 0.55rem;
+  gap: 0.6rem;
+}
+
+/* Subtle inner gold foil table betting line ring */
+.emerald-felt-table::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 24px;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .table-watermark {
@@ -520,22 +628,37 @@ p, .modal-desc, .table-status-banner {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: clamp(2rem, 7vw, 3.4rem);
+  font-size: clamp(1.85rem, 6.5vw, 3.2rem);
   font-weight: 900;
-  color: rgba(255, 255, 255, 0.035);
+  color: rgba(251, 191, 36, 0.055);
+  border: 1.5px double rgba(251, 191, 36, 0.08);
+  padding: 0.25rem 1.4rem;
+  border-radius: 999px;
   pointer-events: none;
   white-space: nowrap;
   z-index: 0;
 }
 
-/* Dealer / Community Zone (Concentric radius: 26px table - 8px pad = 18px) */
+/* Gold Betting Ring Guideline */
+.gold-betting-ring {
+  border: 1px dashed rgba(251, 191, 36, 0.34);
+  border-radius: 16px;
+  background: radial-gradient(ellipse at center, rgba(6, 95, 70, 0.28), rgba(2, 44, 34, 0.45));
+  box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.42), 0 1px 0 rgba(251, 191, 36, 0.14);
+  padding: 0.4rem 0.6rem;
+}
+
+/* Dealer / Community Zone with Gold Foil Rim */
 .dealer-community-zone {
   position: relative;
   z-index: var(--z-stage);
-  background: rgba(9, 13, 22, 0.62);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 18px;
-  padding: 0.58rem 0.8rem;
+  background: rgba(9, 14, 24, 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  box-shadow: var(--inner-top-highlight), inset 0 4px 16px rgba(0, 0, 0, 0.45), 0 6px 18px rgba(0, 0, 0, 0.4);
+  border-radius: 20px;
+  padding: 0.6rem 0.85rem;
   text-align: center;
 }
 
@@ -544,19 +667,20 @@ p, .modal-desc, .table-status-banner {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  font-size: 0.85rem;
-  color: #cbd5e1;
-  margin-bottom: 0.4rem;
+  font-size: 0.84rem;
+  color: #e2e8f0;
+  margin-bottom: 0.42rem;
   flex-wrap: wrap;
 }
 
 .pot-pill {
-  background: rgba(245, 158, 11, 0.22);
-  border: 1px solid var(--neon-gold);
+  background: linear-gradient(180deg, rgba(251, 191, 36, 0.26), rgba(180, 83, 9, 0.24));
+  border: 1px solid rgba(251, 191, 36, 0.65);
+  box-shadow: var(--inner-top-highlight), 0 2px 10px rgba(245, 158, 11, 0.2);
   color: var(--neon-gold-bright);
   font-family: var(--font-num);
   font-weight: 800;
-  padding: 0.16rem 0.65rem;
+  padding: 0.16rem 0.68rem;
   border-radius: 999px;
   font-size: 0.86rem;
 }
@@ -565,46 +689,55 @@ p, .modal-desc, .table-status-banner {
   position: relative;
   z-index: var(--z-stage);
   text-align: center;
-  background: rgba(9, 13, 22, 0.82);
-  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: var(--bg-smoked-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(251, 191, 36, 0.36);
+  box-shadow: var(--inner-top-highlight), 0 6px 18px rgba(0, 0, 0, 0.5);
   color: var(--neon-gold-bright);
-  padding: 0.38rem 0.85rem;
+  padding: 0.38rem 0.9rem;
   border-radius: 999px;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   font-weight: 600;
   align-self: center;
   max-width: 96%;
 }
 
-/* Opponent Seats Grid */
+/* Opponent Seats Grid with Gold Foil Betting Box */
 .opponent-seats {
   position: relative;
   z-index: var(--z-stage);
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
-  gap: 0.5rem;
+  gap: 0.52rem;
   width: 100%;
 }
 
 .seat-card {
-  background: rgba(9, 13, 22, 0.78);
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  background: rgba(11, 16, 27, 0.76);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(251, 191, 36, 0.22);
+  box-shadow: var(--inner-top-white), 0 8px 20px -6px rgba(0, 0, 0, 0.65);
   border-radius: 16px;
   padding: 0.55rem 0.65rem;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  transition: border-color 150ms ease-out, transform 150ms ease-out;
+  transition: border-color 150ms ease-out, box-shadow 150ms ease-out, transform 150ms ease-out;
 }
 
 .seat-card.active-turn {
   border-color: var(--neon-gold-bright);
-  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 251, 235, 0.45),
+    0 0 0 2px rgba(251, 191, 36, 0.32),
+    0 8px 24px -4px rgba(245, 158, 11, 0.35);
 }
 
 .seat-card.bankrupt-seat {
-  border-color: rgba(239, 68, 68, 0.6);
-  background: rgba(69, 10, 10, 0.55);
+  border-color: rgba(225, 29, 72, 0.6);
+  background: rgba(58, 9, 20, 0.62);
 }
 
 .seat-top {
@@ -633,77 +766,110 @@ p, .modal-desc, .table-status-banner {
 .seat-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  align-items: center;
+  gap: 0.28rem;
   font-size: 0.7rem;
 }
 
 .mini-pill {
-  padding: 0.1rem 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.12rem 0.48rem;
   border-radius: 999px;
   font-weight: 700;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .mini-pill.bet {
-  background: rgba(16, 185, 129, 0.22);
+  background: rgba(16, 185, 129, 0.2);
   color: #6ee7b7;
-  border: 1px solid rgba(16, 185, 129, 0.4);
+  border: 1px solid rgba(16, 185, 129, 0.45);
 }
 
 .mini-pill.eval {
-  background: rgba(245, 158, 11, 0.25);
+  background: rgba(251, 191, 36, 0.22);
   color: #fde68a;
-  border: 1px solid rgba(245, 158, 11, 0.5);
+  border: 1px solid rgba(251, 191, 36, 0.5);
 }
 
 .mini-pill.bankrupt {
-  background: rgba(239, 68, 68, 0.3);
-  color: #fca5a5;
+  background: rgba(225, 29, 72, 0.28);
+  color: #fda4af;
   border: 1px solid var(--neon-crimson);
 }
 
 .mini-pill.win {
-  background: rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.32);
   color: #a7f3d0;
+  border-color: rgba(52, 211, 153, 0.55);
 }
 
 .mini-pill.lose {
-  background: rgba(239, 68, 68, 0.3);
-  color: #fecaca;
+  background: rgba(225, 29, 72, 0.28);
+  color: #fecdd3;
+  border-color: rgba(251, 113, 133, 0.5);
 }
 
-/* ================= PLAYING CARDS ================= */
+/* ================= 2. REALISTIC 3D PLAYING CARDS & 3D STACKED CHIPS ================= */
 .cards-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.38rem;
+  gap: 0.42rem;
   flex-wrap: wrap;
-  min-height: 62px;
+  min-height: 66px;
+  perspective: 900px;
 }
 
+/* Linen Paper Playing Card with 60fps 3D Flip Animation (rotateY) */
 .playing-card {
-  width: 48px;
-  height: 68px;
-  background: var(--card-white);
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  width: 50px;
+  height: 70px;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(15, 23, 42, 0.018) 0px,
+      rgba(15, 23, 42, 0.018) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(15, 23, 42, 0.018) 0px,
+      rgba(15, 23, 42, 0.018) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    linear-gradient(165deg, #ffffff 0%, #f8fafc 60%, #e2e8f0 100%);
+  border-radius: 9px;
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 1px 1px rgba(0, 0, 0, 0.3),
+    0 6px 14px -2px rgba(0, 0, 0, 0.65);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 0.22rem 0.3rem;
+  padding: 0.24rem 0.32rem;
   font-family: var(--font-num);
   font-weight: 800;
   position: relative;
-  animation: cardDealAnim 200ms var(--ease-out) both;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  animation: cardFlip3D 280ms var(--ease-out) both;
 }
 
 .playing-card.card-lg {
-  width: 64px;
-  height: 90px;
-  padding: 0.32rem 0.42rem;
-  border-radius: 10px;
+  width: 66px;
+  height: 94px;
+  padding: 0.34rem 0.44rem;
+  border-radius: 11px;
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 2px 3px rgba(0, 0, 0, 0.35),
+    0 10px 22px -4px rgba(0, 0, 0, 0.72);
 }
 
 .playing-card.suit-red {
@@ -721,18 +887,19 @@ p, .modal-desc, .table-status-banner {
 }
 
 .playing-card.card-lg .card-corner-top {
-  font-size: 1.05rem;
+  font-size: 1.06rem;
 }
 
 .card-center-suit {
-  font-size: 1.35rem;
+  font-size: 1.4rem;
   line-height: 1;
   text-align: center;
   align-self: center;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.12));
 }
 
 .playing-card.card-lg .card-center-suit {
-  font-size: 1.85rem;
+  font-size: 1.9rem;
 }
 
 .card-corner-bottom {
@@ -742,42 +909,107 @@ p, .modal-desc, .table-status-banner {
   transform: rotate(180deg);
 }
 
-/* Hidden / Face-down Card Back */
+/* Luxury Geometric Gold-Foil Patterned Card Back */
 .playing-card.card-hidden {
   background:
+    radial-gradient(circle at center, rgba(251, 191, 36, 0.25) 0%, transparent 58%),
     repeating-linear-gradient(
       45deg,
-      #7f1d1d,
-      #7f1d1d 6px,
-      #991b1b 6px,
-      #991b1b 12px
-    );
-  border: 2px solid var(--neon-gold);
+      rgba(251, 191, 36, 0.2) 0px,
+      rgba(251, 191, 36, 0.2) 2px,
+      transparent 2px,
+      transparent 7px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(251, 191, 36, 0.2) 0px,
+      rgba(251, 191, 36, 0.2) 2px,
+      transparent 2px,
+      transparent 7px
+    ),
+    linear-gradient(145deg, #3b0712 0%, #1e050a 55%, #0f172a 100%);
+  border: 1.5px solid #fbbf24;
+  box-shadow:
+    inset 0 0 0 3px rgba(15, 23, 42, 0.85),
+    inset 0 0 0 4px rgba(251, 191, 36, 0.45),
+    0 6px 14px -2px rgba(0, 0, 0, 0.7);
   color: var(--neon-gold-bright);
   align-items: center;
   justify-content: center;
 }
 
 .playing-card.card-hidden::after {
-  content: '🎰';
-  font-size: 1.2rem;
+  content: '⚜️';
+  font-size: 1.15rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.75));
 }
 
-@keyframes cardDealAnim {
-  from {
+@keyframes cardFlip3D {
+  0% {
     opacity: 0;
-    transform: translateY(-12px) scale(0.92);
+    transform: translateY(-10px) rotateY(85deg) scale(0.92);
   }
-  to {
+  100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0) rotateY(0deg) scale(1);
   }
 }
 
-/* ================= PLAYER DOCK (BOTTOM) ================= */
+/* 3D Stacked Casino Chips Indicator & Bounce Animation */
+.chip-stack-3d {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, #fbbf24 0 40%, #78350f 41% 48%, transparent 49%),
+    conic-gradient(
+      #d97706 0deg 30deg,
+      #fffbeb 30deg 60deg,
+      #d97706 60deg 90deg,
+      #fffbeb 90deg 120deg,
+      #d97706 120deg 150deg,
+      #fffbeb 150deg 180deg,
+      #d97706 180deg 210deg,
+      #fffbeb 210deg 240deg,
+      #d97706 240deg 270deg,
+      #fffbeb 270deg 300deg,
+      #d97706 300deg 330deg,
+      #fffbeb 330deg 360deg
+    );
+  border: 1px solid #fef3c7;
+  box-shadow:
+    0 2px 0 #92400e,
+    0 4px 0 #b45309,
+    0 6px 6px rgba(0, 0, 0, 0.65);
+  vertical-align: middle;
+  margin-right: 0.22rem;
+  transform: translateY(-2px);
+  animation: chipStackBounce 260ms var(--ease-spring) both;
+}
+
+@keyframes chipStackBounce {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.75);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(1px) scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1);
+  }
+}
+
+/* ================= 3. SMOKED GLASS PLAYER DOCK (BOTTOM) ================= */
 .player-dock {
-  background: rgba(9, 13, 22, 0.97);
-  border-top: 1px solid rgba(245, 158, 11, 0.32);
+  background: var(--bg-smoked-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(251, 191, 36, 0.34);
+  box-shadow: var(--inner-top-highlight), 0 -10px 30px rgba(0, 0, 0, 0.72);
   padding: 0.55rem max(0.75rem, env(safe-area-inset-right, 0px)) calc(0.75rem + env(safe-area-inset-bottom, 0px)) max(0.75rem, env(safe-area-inset-left, 0px));
   display: flex;
   flex-direction: column;
@@ -813,17 +1045,19 @@ p, .modal-desc, .table-status-banner {
 }
 
 .role-pill {
-  background: var(--neon-gold);
+  background: linear-gradient(180deg, #fcd34d 0%, #d97706 100%);
   color: #090d16;
   font-size: 0.72rem;
   font-weight: 800;
-  padding: 0.12rem 0.5rem;
+  padding: 0.12rem 0.52rem;
   border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
 .hand-eval-badge {
-  background: rgba(245, 158, 11, 0.22);
-  border: 1px solid var(--neon-gold);
+  background: rgba(251, 191, 36, 0.2);
+  border: 1px solid rgba(251, 191, 36, 0.55);
+  box-shadow: var(--inner-top-highlight);
   color: var(--neon-gold-bright);
   font-size: 0.78rem;
   font-weight: 800;
@@ -832,14 +1066,19 @@ p, .modal-desc, .table-status-banner {
 }
 
 .bet-pill {
-  background: rgba(16, 185, 129, 0.2);
-  border: 1px solid rgba(16, 185, 129, 0.45);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.48);
+  box-shadow: inset 0 1px 0 rgba(110, 231, 183, 0.25);
   color: #6ee7b7;
   font-family: var(--font-num);
   font-size: 0.8rem;
   font-weight: 700;
-  padding: 0.12rem 0.55rem;
+  padding: 0.14rem 0.6rem;
   border-radius: 999px;
+  animation: chipStackBounce 240ms var(--ease-out);
 }
 
 .delta-pill {
@@ -852,64 +1091,110 @@ p, .modal-desc, .table-status-banner {
 
 .delta-pill.win {
   background: rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(52, 211, 153, 0.55);
   color: #6ee7b7;
 }
 
 .delta-pill.lose {
-  background: rgba(239, 68, 68, 0.3);
-  color: #fca5a5;
+  background: rgba(225, 29, 72, 0.3);
+  border: 1px solid rgba(251, 113, 133, 0.55);
+  color: #fda4af;
 }
 
 .own-cards-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  min-height: 76px;
+  gap: 0.52rem;
+  min-height: 82px;
+  perspective: 900px;
 }
 
-/* Contextual Action Dock */
+/* Contextual Action Dock & 3D Striped Casino Chips */
 .action-controls-dock {
   display: flex;
   flex-direction: column;
-  gap: 0.42rem;
+  gap: 0.44rem;
 }
 
 .chip-bet-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: 0.38rem;
 }
 
 .chip-bet-bar > .chip-btn {
   flex: 1 1 58px;
 }
 
+/* Authentic Casino Striped Edge 3D Stacked Chip Button */
 .chip-btn {
-  background: #f59e0b;
-  border: 1.5px dashed #fffbeb;
+  position: relative;
+  background:
+    radial-gradient(circle at 50% 45%, #fde68a 0%, #f59e0b 64%, #b45309 66%, transparent 68%),
+    repeating-conic-gradient(
+      from 0deg,
+      #d97706 0deg 18deg,
+      #fffbeb 18deg 30deg
+    );
+  border: 1px solid #fef3c7;
   color: #090d16;
   font-family: var(--font-num);
   font-weight: 800;
   font-size: 0.82rem;
-  padding: 0.46rem 0.35rem;
-  border-radius: 10px;
+  padding: 0.48rem 0.38rem;
+  border-radius: 999px;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-  transition: transform 150ms ease-out, background-color 150ms ease-out;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.75),
+    inset 0 0 0 3px rgba(120, 53, 15, 0.35),
+    0 3px 0 #92400e,
+    0 5px 10px rgba(0, 0, 0, 0.6);
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out, filter 150ms ease-out;
 }
 
+.chip-btn:active:not(:disabled) {
+  transform: translateY(2px) scale(0.96);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.75),
+    0 1px 0 #92400e,
+    0 2px 5px rgba(0, 0, 0, 0.55);
+}
+
+/* Two-tone Crimson/White/Gold Striped All-In / Active Chip */
 .chip-btn.chip-allin {
-  background: #dc2626;
+  background:
+    radial-gradient(circle at 50% 45%, #f43f5e 0%, #be123c 64%, #881337 66%, transparent 68%),
+    repeating-conic-gradient(
+      from 0deg,
+      #9f1239 0deg 18deg,
+      #fde68a 18deg 30deg
+    );
   color: #ffffff;
-  border-color: #fecaca;
+  border-color: #fecdd3;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.45),
+    inset 0 0 0 3px rgba(76, 5, 25, 0.45),
+    0 3px 0 #881337,
+    0 5px 12px rgba(225, 29, 72, 0.45);
   font-family: var(--font-thai);
 }
 
+/* Obsidian/Silver Clear Chip */
 .chip-btn.chip-clear {
-  background: rgba(51, 65, 85, 0.92);
-  color: #e2e8f0;
-  border: 1px solid var(--border-subtle);
+  background:
+    radial-gradient(circle at 50% 45%, #334155 0%, #1e293b 65%, transparent 67%),
+    repeating-conic-gradient(
+      from 0deg,
+      #1e293b 0deg 18deg,
+      #94a3b8 18deg 30deg
+    );
+  color: #f1f5f9;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 3px 0 #0f172a,
+    0 5px 10px rgba(0, 0, 0, 0.55);
   font-family: var(--font-thai);
 }
 
@@ -932,12 +1217,13 @@ p, .modal-desc, .table-status-banner {
   font-weight: 700;
 }
 
-/* ================= GLASSMORPHIC MODALS ================= */
+/* ================= SMOKED GLASSMORPHIC MODALS ================= */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.78);
-  backdrop-filter: blur(6px);
+  background: rgba(4, 6, 12, 0.76);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   z-index: var(--z-modal);
   display: flex;
   align-items: center;
@@ -949,13 +1235,18 @@ p, .modal-desc, .table-status-banner {
   width: 100%;
   max-width: 480px;
   max-height: 88dvh;
-  background: rgba(15, 23, 42, 0.98);
+  background: var(--bg-smoked-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-gold);
   border-radius: 22px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.85);
+  box-shadow:
+    var(--inner-top-highlight),
+    0 28px 60px -12px rgba(0, 0, 0, 0.9),
+    0 0 36px rgba(245, 158, 11, 0.12);
   animation: modalEnter 180ms var(--ease-out) both;
 }
 
@@ -977,8 +1268,8 @@ p, .modal-desc, .table-status-banner {
   align-items: center;
   justify-content: space-between;
   padding: 0.95rem 1.15rem;
-  border-bottom: 1px solid var(--border-subtle);
-  background: rgba(9, 13, 22, 0.65);
+  border-bottom: 1px solid rgba(251, 191, 36, 0.18);
+  background: rgba(7, 10, 18, 0.55);
 }
 
 .modal-header h2 {
@@ -989,7 +1280,7 @@ p, .modal-desc, .table-status-banner {
 
 .modal-close-btn {
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--text-main);
   width: 32px;
   height: 32px;
@@ -1035,8 +1326,9 @@ p, .modal-desc, .table-status-banner {
 
 /* Share / QR Modal */
 .share-code-box {
-  background: rgba(9, 13, 22, 0.85);
+  background: rgba(7, 10, 18, 0.82);
   border: 1px solid var(--border-gold);
+  box-shadow: var(--inner-top-highlight);
   border-radius: 14px;
   padding: 0.75rem;
 }
@@ -1071,8 +1363,9 @@ p, .modal-desc, .table-status-banner {
 
 /* ================= ADMIN PANEL SECTIONS ================= */
 .admin-section {
-  background: rgba(9, 13, 22, 0.65);
+  background: rgba(7, 10, 18, 0.62);
   border: 1px solid var(--border-subtle);
+  box-shadow: var(--inner-top-white);
   border-radius: 16px;
   padding: 0.9rem;
   display: flex;
@@ -1107,6 +1400,7 @@ p, .modal-desc, .table-status-banner {
 .btn-game-switch {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-subtle);
+  box-shadow: var(--inner-top-white);
   color: var(--text-main);
   padding: 0.65rem 0.5rem;
   border-radius: 10px;
@@ -1121,6 +1415,7 @@ p, .modal-desc, .table-status-banner {
   background: rgba(16, 185, 129, 0.24);
   border-color: var(--neon-emerald);
   color: #6ee7b7;
+  box-shadow: inset 0 1px 0 rgba(110, 231, 183, 0.3), 0 0 14px rgba(16, 185, 129, 0.2);
 }
 
 .payout-subbox h4 {
@@ -1150,7 +1445,7 @@ p, .modal-desc, .table-status-banner {
 
 .input-mini input {
   width: 100%;
-  background: rgba(9, 13, 22, 0.92);
+  background: rgba(7, 10, 18, 0.92);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
   padding: 0.45rem 0.55rem;
@@ -1180,9 +1475,9 @@ p, .modal-desc, .table-status-banner {
 }
 
 .btn-mode-select.active {
-  background: rgba(239, 68, 68, 0.22);
+  background: rgba(225, 29, 72, 0.22);
   border-color: var(--neon-crimson);
-  color: #fecaca;
+  color: #fecdd3;
 }
 
 .admin-punishment-list {
@@ -1223,12 +1518,13 @@ p, .modal-desc, .table-status-banner {
 }
 
 /* ================= BANKRUPTCY PUNISHMENT OVERLAY ================= */
-/* Compositor-safe entrance instead of continuous full-screen box-shadow paint thrashing (fixing-motion-performance) */
 .bankruptcy-overlay {
   position: fixed;
   inset: 0;
   z-index: var(--z-overlay);
-  background: radial-gradient(circle at center, rgba(127, 29, 29, 0.92), rgba(9, 13, 22, 0.98));
+  background: radial-gradient(circle at center, rgba(136, 19, 55, 0.88), rgba(7, 10, 18, 0.96));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1239,12 +1535,17 @@ p, .modal-desc, .table-status-banner {
 .bankruptcy-card {
   width: 100%;
   max-width: 440px;
-  background: rgba(15, 23, 42, 0.97);
-  border: 2px solid var(--neon-crimson);
+  background: var(--bg-smoked-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(244, 63, 94, 0.68);
   border-radius: 24px;
   padding: 1.5rem 1.25rem;
   text-align: center;
-  box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.9);
+  box-shadow:
+    inset 0 1px 0 rgba(251, 113, 133, 0.4),
+    0 24px 55px -12px rgba(0, 0, 0, 0.92),
+    0 0 36px rgba(225, 29, 72, 0.25);
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -1258,7 +1559,7 @@ p, .modal-desc, .table-status-banner {
 .bankruptcy-title {
   font-size: 1.45rem;
   font-weight: 900;
-  color: #fca5a5;
+  color: #fda4af;
 }
 
 .bankruptcy-victims {
@@ -1268,8 +1569,8 @@ p, .modal-desc, .table-status-banner {
 }
 
 .victim-pill {
-  background: rgba(239, 68, 68, 0.22);
-  border: 1px solid var(--neon-crimson);
+  background: rgba(225, 29, 72, 0.22);
+  border: 1px solid rgba(244, 63, 94, 0.6);
   color: #ffffff;
   padding: 0.5rem 0.9rem;
   border-radius: 12px;
@@ -1278,8 +1579,9 @@ p, .modal-desc, .table-status-banner {
 }
 
 .punishment-wheel-card {
-  background: rgba(30, 41, 59, 0.95);
-  border: 1.5px solid var(--neon-gold);
+  background: rgba(13, 17, 28, 0.9);
+  border: 1px solid var(--border-gold);
+  box-shadow: var(--inner-top-highlight);
   border-radius: 16px;
   padding: 1rem;
 }
@@ -1317,14 +1619,12 @@ p, .modal-desc, .table-status-banner {
   gap: 0.5rem;
 }
 
-/* Prevent iOS Safari input auto-zoom on coarse pointers (mobile-native) */
 @media (pointer: coarse) {
   input, select, textarea {
     font-size: max(16px, 1rem);
   }
 }
 
-/* Respect reduced motion preference (baseline-ui & better-ui) */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
