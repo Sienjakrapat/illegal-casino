@@ -2,216 +2,403 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Solid Screen & Text Display</title>
-  <meta name="description" content="เว็บแสดงข้อความบนพื้นหลังสีล้วน ปรับแต่งสี ขนาด และฟอนต์ได้อย่างอิสระ พร้อมโหมดแสดงผลเต็มจอ">
-  <!-- Google Fonts: Support Thai & English -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>คาสิโนเถื่อน — Party Casino</title>
+  <meta name="description" content="คาสิโนเถื่อน ปาร์ตี้วงเหล้า — ป๊อกเด้ง แบล็คแจ็ค 21 และ โป๊กเกอร์ Texas Hold'em ออนไลน์กับเพื่อนบนมือถือ">
+  <!-- Google Fonts: Kanit & Chakra Petch -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@300;400;600;800;900&family=Kanit:wght@300;400;600;800;900&family=Noto+Serif+Thai:wght@400;700&family=Prompt:wght@300;400;600;800;900&family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700;800&family=Kanit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="casino.css">
 </head>
-<body id="app-body">
-  <!-- Main Display Canvas -->
-  <main id="display-stage" class="display-stage">
-    <div 
-      id="display-text" 
-      class="display-text" 
-      contenteditable="true" 
-      spellcheck="false"
-      role="textbox"
-      aria-label="พื้นที่แสดงและพิมพ์ข้อความ"
-      data-placeholder="พิมพ์หรือวางข้อความที่นี่..."
-    >พิมพ์ข้อความที่ต้องการ</div>
-  </main>
+<body class="casino-body">
 
-  <!-- Floating Buttons (Show Controls & Scroll to Top) -->
-  <button id="btn-scroll-top" class="floating-scroll-top hidden" title="เลื่อนขึ้นบนสุด" aria-label="เลื่อนขึ้นบนสุด">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="18 15 12 9 6 15"></polyline>
-    </svg>
-    <span>บนสุด</span>
-  </button>
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
-  <button id="btn-show-controls" class="floating-toggle-btn hidden" title="เปิดเมนูตั้งค่า (กด H หรือคลิกที่นี่)" aria-label="เปิดเมนูการตั้งค่า">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
-      <circle cx="12" cy="12" r="3"/>
-    </svg>
-    <span>ตั้งค่า</span>
-  </button>
-
-  <!-- Floating Control Bar -->
-  <header id="control-panel" class="control-panel">
-    <div class="panel-header">
-      <div class="panel-title">
-        <span class="icon-dot"></span>
-        <h2>ตัวปรับแต่งการแสดงผล</h2>
+  <!-- ================= LOBBY VIEW ================= -->
+  <section id="lobby-view" class="lobby-view">
+    <div class="lobby-bg-glow"></div>
+    <div class="lobby-card">
+      <div class="lobby-header">
+        <div class="neon-emblem">🎰</div>
+        <h1 class="lobby-title">คาสิโนเถื่อน</h1>
+        <p class="lobby-subtitle">UNDERGROUND PARTY CASINO • วงเหล้าออนไลน์</p>
       </div>
-      <div class="panel-header-actions">
-        <button id="btn-fullscreen" class="icon-btn" title="แสดงผลเต็มจอ (Fullscreen)" aria-label="เต็มจอ">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-          </svg>
-        </button>
-        <button id="btn-hide-panel" class="icon-btn" title="ซ่อนแถบเมนู (กด H)" aria-label="ซ่อนแถบเมนู">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+
+      <!-- Player Name Input -->
+      <div class="form-group">
+        <label for="input-player-name">ชื่อในวงไพ่ของคุณ</label>
+        <input type="text" id="input-player-name" class="neon-input" placeholder="เช่น เสี่ยบอย, เจ๊หมวย, บังซุป..." maxlength="20" autocomplete="off">
+      </div>
+
+      <!-- Mode Tabs: Create vs Join -->
+      <div class="lobby-tabs" role="tablist">
+        <button type="button" id="tab-join" class="lobby-tab active" data-tab="join">เข้าโต๊ะเพื่อน</button>
+        <button type="button" id="tab-create" class="lobby-tab" data-tab="create">เปิดโต๊ะใหม่ (Host)</button>
+      </div>
+
+      <!-- Join Room Panel -->
+      <div id="panel-join" class="lobby-panel">
+        <div class="form-group">
+          <label for="input-room-code">รหัสห้อง 4 หลัก</label>
+          <input type="text" id="input-room-code" class="neon-input code-input" placeholder="0000" maxlength="4" inputmode="numeric" autocomplete="off">
+        </div>
+        <button type="button" id="btn-join-room" class="btn-neon btn-primary btn-block">
+          🚪 เข้าร่วมวงไพ่
         </button>
       </div>
-    </div>
 
-    <div class="panel-body">
-      <!-- Section: Color Picker -->
-      <div class="control-group">
-        <div class="group-header">
-          <label for="bg-color-picker">สีพื้นหลัง (Background Color)</label>
-          <span id="bg-hex-value" class="hex-badge">#0f172a</span>
-        </div>
-        <div class="color-picker-row">
-          <div class="picker-wrapper">
-            <input type="color" id="bg-color-picker" value="#0f172a" title="เลือกสีพื้นหลังตามใจชอบ">
+      <!-- Create Room Panel -->
+      <div id="panel-create" class="lobby-panel hidden">
+        <div class="form-group">
+          <label for="input-initial-chips">ชิปเริ่มต้นต่อคน (Initial Chips)</label>
+          <div class="chip-preset-row">
+            <button type="button" class="chip-preset-btn" data-chips="500">500</button>
+            <button type="button" class="chip-preset-btn active" data-chips="1000">1,000</button>
+            <button type="button" class="chip-preset-btn" data-chips="5000">5,000</button>
+            <button type="button" class="chip-preset-btn" data-chips="10000">10,000</button>
           </div>
-          <!-- Quick Color Presets -->
-          <div class="palette-presets" id="bg-presets">
-            <button type="button" class="preset-btn" data-color="#000000" style="background:#000000;" title="ดำสนิท"></button>
-            <button type="button" class="preset-btn" data-color="#0f172a" style="background:#0f172a;" title="น้ำเงินเข้มเนวี่"></button>
-            <button type="button" class="preset-btn" data-color="#18181b" style="background:#18181b;" title="เทาเข้มชาร์โคล"></button>
-            <button type="button" class="preset-btn" data-color="#2563eb" style="background:#2563eb;" title="น้ำเงินรอยัล"></button>
-            <button type="button" class="preset-btn" data-color="#059669" style="background:#059669;" title="เขียวมรกต"></button>
-            <button type="button" class="preset-btn" data-color="#d97706" style="background:#d97706;" title="ส้มอำพัน"></button>
-            <button type="button" class="preset-btn" data-color="#dc2626" style="background:#dc2626;" title="แดงสดใส"></button>
-            <button type="button" class="preset-btn" data-color="#7c3aed" style="background:#7c3aed;" title="ม่วงไวโอเล็ต"></button>
-            <button type="button" class="preset-btn" data-color="#f8fafc" style="background:#f8fafc;" title="ขาวสว่าง"></button>
-            <button type="button" class="preset-btn" data-color="#fef3c7" style="background:#fef3c7;" title="ครีมอุ่น"></button>
-          </div>
+          <input type="number" id="input-initial-chips" class="neon-input" value="1000" min="100" step="100">
         </div>
+        <button type="button" id="btn-create-room" class="btn-neon btn-gold btn-block">
+          👑 เปิดโต๊ะใหม่ (เป็น Admin)
+        </button>
       </div>
 
-      <!-- Section: Text & Size Controls -->
-      <div class="control-group">
-        <div class="group-header">
-          <label for="font-size-slider">ขนาดตัวอักษร (Font Size)</label>
-          <span id="font-size-value" class="size-badge">72px</span>
-        </div>
-        <div class="slider-wrapper">
-          <button id="btn-size-down" class="btn-step" title="ลดขนาด" aria-label="ลดขนาด">-</button>
-          <input type="range" id="font-size-slider" min="16" max="240" value="72" step="2">
-          <button id="btn-size-up" class="btn-step" title="เพิ่มขนาด" aria-label="เพิ่มขนาด">+</button>
-        </div>
-        <div class="quick-sizes">
-          <button type="button" class="quick-size-btn" data-size="36">S (36px)</button>
-          <button type="button" class="quick-size-btn" data-size="72">M (72px)</button>
-          <button type="button" class="quick-size-btn" data-size="120">L (120px)</button>
-          <button type="button" class="quick-size-btn" data-size="180">XL (180px)</button>
-        </div>
-      </div>
-
-      <!-- Section: Text Color & Auto Contrast -->
-      <div class="control-group">
-        <div class="group-header">
-          <label for="text-color-picker">สีข้อความ (Text Color)</label>
-          <label class="toggle-switch" title="ปรับสีข้อความอัตโนมัติตามพื้นหลัง">
-            <input type="checkbox" id="toggle-auto-contrast" checked>
-            <span class="toggle-slider"></span>
-            <span class="toggle-label">ปรับอัตโนมัติ</span>
-          </label>
-        </div>
-        <div class="color-picker-row">
-          <div class="picker-wrapper">
-            <input type="color" id="text-color-picker" value="#ffffff" title="เลือกสีข้อความ">
-          </div>
-          <div class="palette-presets" id="text-presets">
-            <button type="button" class="preset-btn text-preset" data-color="#ffffff" style="background:#ffffff;" title="ขาว"></button>
-            <button type="button" class="preset-btn text-preset" data-color="#000000" style="background:#000000;" title="ดำ"></button>
-            <button type="button" class="preset-btn text-preset" data-color="#facc15" style="background:#facc15;" title="เหลืองสดใส"></button>
-            <button type="button" class="preset-btn text-preset" data-color="#38bdf8" style="background:#38bdf8;" title="ฟ้าสว่าง"></button>
-            <button type="button" class="preset-btn text-preset" data-color="#4ade80" style="background:#4ade80;" title="เขียวนีออน"></button>
-            <button type="button" class="preset-btn text-preset" data-color="#f43f5e" style="background:#f43f5e;" title="ชมพูสว่าง"></button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Section: Font Family & Style -->
-      <div class="control-row-grid">
-        <div class="control-group-half">
-          <label for="font-family-select">แบบอักษร (Font)</label>
-          <select id="font-family-select">
-            <option value="'Kanit', sans-serif" selected>Kanit (คานิท)</option>
-            <option value="'Prompt', sans-serif">Prompt (พร้อมท์)</option>
-            <option value="'Inter', sans-serif">Inter (อินเตอร์)</option>
-            <option value="'Sarabun', sans-serif">Sarabun (สารบรรณ)</option>
-            <option value="'Chakra Petch', sans-serif">Chakra Petch (โมเดิร์น)</option>
-            <option value="'Noto Serif Thai', serif">Noto Serif (ทางการ/หรูหรา)</option>
-          </select>
-        </div>
-
-        <div class="control-group-half">
-          <label for="font-weight-select">ความหนา (Weight)</label>
-          <select id="font-weight-select">
-            <option value="300">บาง (Light)</option>
-            <option value="400">ปกติ (Regular)</option>
-            <option value="600" selected>หนาปานกลาง (Semi-Bold)</option>
-            <option value="800">หนามาก (Bold)</option>
-            <option value="900">หนาสุด (Black)</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Alignment Controls -->
-      <div class="control-row-grid">
-        <div class="control-group-half">
-          <label>การจัดแนวนอน (Horizontal)</label>
-          <div class="segmented-control" id="align-control">
-            <button type="button" class="segment-btn" data-align="left" title="ชิดซ้าย">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="6" x2="3" y2="6"></line><line x1="15" y1="12" x2="3" y2="12"></line><line x1="17" y1="18" x2="3" y2="18"></line></svg>
-            </button>
-            <button type="button" class="segment-btn active" data-align="center" title="กึ่งกลาง">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="6" x2="3" y2="6"></line><line x1="17" y1="12" x2="7" y2="12"></line><line x1="19" y1="18" x2="5" y2="18"></line></svg>
-            </button>
-            <button type="button" class="segment-btn" data-align="right" title="ชิดขวา">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="12" x2="9" y2="12"></line><line x1="21" y1="18" x2="7" y2="18"></line></svg>
-            </button>
-          </div>
-        </div>
-
-        <div class="control-group-half">
-          <label>การจัดแนวตั้ง (Vertical)</label>
-          <div class="segmented-control" id="valign-control">
-            <button type="button" class="vsegment-btn active" data-valign="center" title="กึ่งกลางหน้าจอ">
-              กึ่งกลาง
-            </button>
-            <button type="button" class="vsegment-btn" data-valign="top" title="ชิดขอบบน (เหมาะสำหรับข้อความยาว)">
-              ชิดบน
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Text Input Field & Markdown Toggle -->
-      <div class="control-group">
-        <div class="group-header">
-          <label for="text-input-field">พิมพ์หรือวางข้อความตรงนี้ (รองรับตาราง & หัวข้อย่อย)</label>
-          <label class="toggle-switch" title="เปิด/ปิดการจัดรูปแบบ Markdown, ตาราง และหัวข้อย่อย">
-            <input type="checkbox" id="toggle-markdown" checked>
-            <span class="toggle-slider"></span>
-            <span class="toggle-label">โหมดตาราง & Markdown</span>
-          </label>
-        </div>
-        <textarea id="text-input-field" rows="3" placeholder="วางข้อความ, สรุปย่อ, ตารางเปรียบเทียบ, หรือหัวข้อย่อยที่นี่..."></textarea>
+      <div class="lobby-footer">
+        <a href="display.html" class="utility-link">🖥️ สลับไปโหมดป้ายไฟเต็มจอ (Solid Display)</a>
       </div>
     </div>
+  </section>
 
-    <!-- Quick Tip Footer -->
-    <div class="panel-footer">
-      <span>💡 รองรับทั้งตาราง, จุดวงกลมย่อย (○), ขีด (-), และ Markdown อัตโนมัติ | กด <b>H</b> ซ่อนเมนู</span>
+  <!-- ================= GAME TABLE VIEW ================= -->
+  <section id="table-view" class="table-view hidden">
+    <!-- Top HUD -->
+    <header class="top-hud">
+      <div class="hud-left">
+        <button type="button" id="btn-share-room" class="hud-badge room-badge" title="คลิกเพื่อแชร์ห้อง / QR Code">
+          <span class="badge-label">ห้อง</span>
+          <strong id="hud-room-code">----</strong>
+          <span class="share-icon">📲</span>
+        </button>
+
+        <div class="hud-badge game-badge" id="hud-game-badge">
+          <span id="hud-game-icon">🎴</span>
+          <span id="hud-game-name">ป๊อกเด้ง</span>
+        </div>
+      </div>
+
+      <div class="hud-center">
+        <button type="button" id="btn-dealer-modal" class="hud-badge dealer-badge" title="ตั้งค่าเจ้ามือ">
+          <span id="hud-dealer-text">🤖 Auto Dealer</span>
+        </button>
+      </div>
+
+      <div class="hud-right">
+        <div class="hud-badge chips-badge" id="hud-my-chips-badge">
+          <span class="chip-icon">🪙</span>
+          <strong id="hud-my-chips">1,000</strong>
+        </div>
+
+        <button type="button" id="btn-sound-toggle" class="hud-icon-btn" title="เปิด/ปิดเสียงเอฟเฟกต์" aria-label="เปิด/ปิดเสียง">
+          🔊
+        </button>
+
+        <button type="button" id="btn-open-admin" class="hud-admin-btn hidden" title="เปิด Admin Panel">
+          ⚙️ Admin Panel
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Emerald Felt Table Area -->
+    <main class="casino-table-stage">
+      <div class="emerald-felt-table">
+        <div class="table-watermark">คาสิโนเถื่อน</div>
+
+        <!-- Dealer / Community Cards / Pot Zone -->
+        <div id="dealer-community-zone" class="dealer-community-zone">
+          <!-- Populated dynamically by casino.js -->
+        </div>
+
+        <!-- Phase / Turn Banner -->
+        <div id="table-status-banner" class="table-status-banner">
+          รอเริ่มตาใหม่...
+        </div>
+
+        <!-- Opponent Seats Grid -->
+        <div id="opponent-seats" class="opponent-seats">
+          <!-- Populated dynamically by casino.js -->
+        </div>
+      </div>
+    </main>
+
+    <!-- Player's Own Hand & Contextual Action Dock -->
+    <footer class="player-dock">
+      <!-- Own Hand Area -->
+      <div class="own-hand-section">
+        <div class="own-hand-header">
+          <div class="own-identity">
+            <span id="own-player-name" class="own-name">คุณ</span>
+            <span id="own-role-badge" class="role-pill hidden">เจ้ามือ</span>
+            <span id="own-status-badge" class="hand-eval-badge hidden"></span>
+          </div>
+          <div class="own-bet-info">
+            <span id="own-bet-badge" class="bet-pill hidden">เดิมพัน: 0</span>
+            <span id="own-delta-badge" class="delta-pill hidden"></span>
+          </div>
+        </div>
+
+        <div id="own-cards-container" class="own-cards-container">
+          <!-- Own cards rendered here -->
+        </div>
+      </div>
+
+      <!-- Contextual Controls Dock -->
+      <div id="action-controls-dock" class="action-controls-dock">
+        <!-- Populated dynamically based on phase & game -->
+      </div>
+    </footer>
+  </section>
+
+  <!-- ================= DEALER SELECTION MODAL ================= -->
+  <div id="dealer-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="dealer-modal-title">
+    <div class="glass-modal">
+      <div class="modal-header">
+        <h2 id="dealer-modal-title">🎩 เลือกโหมดเจ้ามือ (Dealer Mode)</h2>
+        <button type="button" class="modal-close-btn" data-close-modal="dealer-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">ในเกมป๊อกเด้งและแบล็คแจ็ค คุณสามารถให้บอทเป็นเจ้ามือ หรืออาสาเป็นเจ้ามือเองเพื่อกินรวบทั้งวง!</p>
+
+        <div class="dealer-option-group">
+          <button type="button" id="btn-set-auto-dealer" class="btn-neon btn-outline btn-block">
+            🤖 บอทเป็นเจ้ามือ (Auto Dealer — ชิปไม่จำกัด)
+          </button>
+        </div>
+
+        <div class="divider-text"><span>หรือ ฉันเป็นเจ้ามือเอง (บังคับเลือกจำนวนตา)</span></div>
+
+        <div class="dealer-rounds-grid">
+          <button type="button" class="btn-neon btn-gold btn-dealer-rounds" data-rounds="3">
+            👑 ฉันเป็นเจ้ามือ<br><small>3 ตา</small>
+          </button>
+          <button type="button" class="btn-neon btn-gold btn-dealer-rounds" data-rounds="5">
+            👑 ฉันเป็นเจ้ามือ<br><small>5 ตา</small>
+          </button>
+          <button type="button" class="btn-neon btn-gold btn-dealer-rounds" data-rounds="10">
+            👑 ฉันเป็นเจ้ามือ<br><small>10 ตา</small>
+          </button>
+        </div>
+      </div>
     </div>
-  </header>
+  </div>
 
-  <!-- Markdown Parser Library (marked) with graceful fallback -->
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="app.js"></script>
+  <!-- ================= QR / SHARE ROOM MODAL ================= -->
+  <div id="share-room-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="share-modal-title">
+    <div class="glass-modal modal-sm">
+      <div class="modal-header">
+        <h2 id="share-modal-title">📲 ชวนเพื่อนเข้าโต๊ะ</h2>
+        <button type="button" class="modal-close-btn" data-close-modal="share-room-modal">✕</button>
+      </div>
+      <div class="modal-body text-center">
+        <div class="share-code-box">
+          <span class="share-code-label">รหัสห้อง 4 หลัก</span>
+          <div id="share-room-code-big" class="share-code-big">----</div>
+        </div>
+        <div class="qr-box">
+          <img id="share-qr-img" src="" alt="QR Code เข้าห้อง" class="qr-image">
+        </div>
+        <div class="form-group">
+          <input type="text" id="share-room-url" class="neon-input text-center" readonly>
+        </div>
+        <button type="button" id="btn-copy-room-link" class="btn-neon btn-gold btn-block">
+          📋 คัดลอกลิงก์ชวนเพื่อน
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ADMIN PANEL MODAL ================= -->
+  <div id="admin-panel-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+    <div class="glass-modal modal-lg">
+      <div class="modal-header">
+        <h2 id="admin-modal-title">⚙️ Admin Panel — ควบคุมโต๊ะคาสิโนเถื่อน</h2>
+        <button type="button" class="modal-close-btn" data-close-modal="admin-panel-modal">✕</button>
+      </div>
+
+      <div class="modal-body admin-modal-body">
+        <!-- 1. Mint Chips & Revive -->
+        <section class="admin-section">
+          <h3 class="admin-section-title">💰 เสกชิป & ชุบชีวิต</h3>
+          <div class="form-group">
+            <label for="admin-mint-target">เลือกผู้เล่นเป้าหมาย</label>
+            <select id="admin-mint-target" class="neon-select">
+              <option value="ALL">🌟 ทุกคนในห้อง (ALL)</option>
+            </select>
+          </div>
+          <div class="quick-mint-row">
+            <button type="button" class="btn-neon btn-emerald btn-quick-mint" data-amount="100">+100</button>
+            <button type="button" class="btn-neon btn-emerald btn-quick-mint" data-amount="500">+500</button>
+            <button type="button" class="btn-neon btn-emerald btn-quick-mint" data-amount="1000">+1000</button>
+          </div>
+          <div class="custom-mint-row">
+            <input type="number" id="admin-mint-amount" class="neon-input" value="500" min="1" step="50" placeholder="จำนวนชิป">
+            <button type="button" id="btn-admin-mint-custom" class="btn-neon btn-gold">เสกชิป</button>
+          </div>
+          <button type="button" id="btn-admin-revive-all" class="btn-neon btn-crimson btn-block mt-2">
+            ⚡ ชุบชีวิตคนถังแตก (+1,000 ชิป)
+          </button>
+        </section>
+
+        <!-- 2. Switch Active Game -->
+        <section class="admin-section">
+          <h3 class="admin-section-title">🎮 สลับเกม (Switch Game)</h3>
+          <div class="game-switch-grid">
+            <button type="button" class="btn-game-switch active" data-game="pokdeng">
+              🎴 ป๊อกเด้ง
+            </button>
+            <button type="button" class="btn-game-switch" data-game="blackjack">
+              🃏 แบล็คแจ็ค 21
+            </button>
+            <button type="button" class="btn-game-switch" data-game="poker">
+              ♠️ โป๊กเกอร์ Texas Hold'em
+            </button>
+          </div>
+        </section>
+
+        <!-- 3. Custom Payouts & Blinds -->
+        <section class="admin-section">
+          <h3 class="admin-section-title">⚖️ ปรับอัตราจ่าย & ค่าต๋ง (Custom Payouts & Blinds)</h3>
+
+          <div class="payout-subbox">
+            <h4>🎴 อัตราจ่าย ป๊อกเด้ง (เท่า)</h4>
+            <div class="payout-grid-3">
+              <div class="input-mini">
+                <label for="pay-pd-normal">ชนะปกติ</label>
+                <input type="number" id="pay-pd-normal" step="0.5" min="1" value="1">
+              </div>
+              <div class="input-mini">
+                <label for="pay-pd-deng2">2 เด้ง</label>
+                <input type="number" id="pay-pd-deng2" step="0.5" min="1" value="2">
+              </div>
+              <div class="input-mini">
+                <label for="pay-pd-deng3">3 เด้ง</label>
+                <input type="number" id="pay-pd-deng3" step="0.5" min="1" value="3">
+              </div>
+              <div class="input-mini">
+                <label for="pay-pd-straight">เรียง</label>
+                <input type="number" id="pay-pd-straight" step="0.5" min="1" value="3">
+              </div>
+              <div class="input-mini">
+                <label for="pay-pd-sian">เซียน</label>
+                <input type="number" id="pay-pd-sian" step="0.5" min="1" value="3">
+              </div>
+              <div class="input-mini">
+                <label for="pay-pd-tong">ตอง</label>
+                <input type="number" id="pay-pd-tong" step="0.5" min="1" value="5">
+              </div>
+            </div>
+          </div>
+
+          <div class="payout-subbox">
+            <h4>🃏 อัตราจ่าย แบล็คแจ็ค 21 & ♠️ โป๊กเกอร์ Blinds</h4>
+            <div class="payout-grid-2">
+              <div class="input-mini">
+                <label for="pay-bj-normal">ชนะปกติ (BJ)</label>
+                <input type="number" id="pay-bj-normal" step="0.5" min="1" value="1">
+              </div>
+              <div class="input-mini">
+                <label for="pay-bj-blackjack">Blackjack 21</label>
+                <input type="number" id="pay-bj-blackjack" step="0.5" min="1" value="1.5">
+              </div>
+              <div class="input-mini">
+                <label for="blind-sb">Small Blind</label>
+                <input type="number" id="blind-sb" step="5" min="1" value="10">
+              </div>
+              <div class="input-mini">
+                <label for="blind-bb">Big Blind</label>
+                <input type="number" id="blind-bb" step="5" min="2" value="20">
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. Punishment Settings -->
+        <section class="admin-section">
+          <h3 class="admin-section-title">🍻 ตั้งค่าบทลงโทษคนถังแตก</h3>
+          <div class="punishment-mode-toggle">
+            <button type="button" id="btn-punish-verbal" class="btn-mode-select active" data-mode="verbal">
+              📢 โหมดประกาศปากเปล่า (Verbal Alert)
+            </button>
+            <button type="button" id="btn-punish-random" class="btn-mode-select" data-mode="random">
+              🎡 โหมดสุ่มการ์ด/วงล้อ (Random Draw)
+            </button>
+          </div>
+
+          <div class="punishment-list-editor">
+            <label>รายการบทลงโทษ (สุ่มเมื่อมีคนชิปเหลือ 0)</label>
+            <ul id="admin-punishment-list" class="admin-punishment-list">
+              <!-- Populated dynamically -->
+            </ul>
+            <div class="add-punishment-row">
+              <input type="text" id="input-new-punishment" class="neon-input" placeholder="เพิ่มบทลงโทษใหม่ เช่น ดื่มเพียว 2 ช็อต 🥃">
+              <button type="button" id="btn-add-punishment" class="btn-neon btn-outline">+ เพิ่ม</button>
+            </div>
+          </div>
+        </section>
+
+        <div class="admin-save-footer">
+          <button type="button" id="btn-save-admin-settings" class="btn-neon btn-gold btn-block">
+            💾 บันทึกการตั้งค่าทั้งหมด
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= BANKRUPTCY PUNISHMENT OVERLAY ================= -->
+  <div id="bankruptcy-overlay" class="bankruptcy-overlay hidden" role="alertdialog" aria-modal="true" aria-labelledby="bankruptcy-title">
+    <div class="siren-light siren-left"></div>
+    <div class="siren-light siren-right"></div>
+
+    <div class="bankruptcy-card">
+      <div class="skull-badge">💀🚨</div>
+      <h2 id="bankruptcy-title" class="bankruptcy-title">คนถังแตก! หมดตูดแล้วครับพี่น้อง!</h2>
+      <div id="bankruptcy-victims" class="bankruptcy-victims">
+        <!-- Names of bankrupt players -->
+      </div>
+
+      <!-- Verbal Mode View -->
+      <div id="punishment-verbal-box" class="punishment-box">
+        <p class="verbal-instruction">📢 ประกาศหน้าวง! ให้เพื่อนๆ ในวงสั่งลงโทษคนถังแตกเดี๋ยวนี้!</p>
+      </div>
+
+      <!-- Random Wheel / Card Draw Mode View -->
+      <div id="punishment-random-box" class="punishment-box hidden">
+        <div id="punishment-wheel-card" class="punishment-wheel-card">
+          <div class="wheel-card-label">🎴 การ์ดบทลงโทษวงเหล้า</div>
+          <div id="punishment-draw-result" class="punishment-draw-result">
+            กดปุ่มด้านล่างเพื่อสุ่มบทลงโทษพร้อมกันทุกเครื่อง!
+          </div>
+        </div>
+        <button type="button" id="btn-draw-punishment" class="btn-neon btn-gold btn-block mt-2">
+          🎰 หมุนสุ่มการ์ดบทลงโทษ!
+        </button>
+      </div>
+
+      <div class="bankruptcy-actions">
+        <button type="button" id="btn-admin-quick-revive" class="btn-neon btn-emerald btn-block hidden">
+          ⚡ เสกชิปให้เล่นต่อ (+1,000 ชิป)
+        </button>
+        <button type="button" id="btn-ack-bankruptcy" class="btn-neon btn-outline btn-block">
+          ✅ รับทราบ / ดื่มเสร็จแล้ว (ปิดหน้าต่าง)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="casino.js"></script>
 </body>
 </html>

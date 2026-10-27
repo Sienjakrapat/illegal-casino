@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solid Screen & Text Display</title>
+  <meta name="description" content="เว็บแสดงข้อความบนพื้นหลังสีล้วน ปรับแต่งสี ขนาด และฟอนต์ได้อย่างอิสระ พร้อมโหมดแสดงผลเต็มจอ">
+  <!-- Google Fonts: Support Thai & English -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@300;400;600;800;900&family=Kanit:wght@300;400;600;800;900&family=Noto+Serif+Thai:wght@400;700&family=Prompt:wght@300;400;600;800;900&family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body id="app-body">
+  <!-- Main Display Canvas -->
+  <main id="display-stage" class="display-stage">
+    <div 
+      id="display-text" 
+      class="display-text" 
+      contenteditable="true" 
+      spellcheck="false"
+      role="textbox"
+      aria-label="พื้นที่แสดงและพิมพ์ข้อความ"
+      data-placeholder="พิมพ์หรือวางข้อความที่นี่..."
+    >พิมพ์ข้อความที่ต้องการ</div>
+  </main>
+
+  <!-- Floating Buttons (Show Controls & Scroll to Top) -->
+  <button id="btn-scroll-top" class="floating-scroll-top hidden" title="เลื่อนขึ้นบนสุด" aria-label="เลื่อนขึ้นบนสุด">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="18 15 12 9 6 15"></polyline>
+    </svg>
+    <span>บนสุด</span>
+  </button>
+
+  <button id="btn-show-controls" class="floating-toggle-btn hidden" title="เปิดเมนูตั้งค่า (กด H หรือคลิกที่นี่)" aria-label="เปิดเมนูการตั้งค่า">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+    <span>ตั้งค่า</span>
+  </button>
+
+  <!-- Floating Control Bar -->
+  <header id="control-panel" class="control-panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <span class="icon-dot"></span>
+        <h2>ตัวปรับแต่งการแสดงผล</h2>
+      </div>
+      <div class="panel-header-actions">
+        <button id="btn-fullscreen" class="icon-btn" title="แสดงผลเต็มจอ (Fullscreen)" aria-label="เต็มจอ">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+          </svg>
+        </button>
+        <button id="btn-hide-panel" class="icon-btn" title="ซ่อนแถบเมนู (กด H)" aria-label="ซ่อนแถบเมนู">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="panel-body">
+      <!-- Section: Color Picker -->
+      <div class="control-group">
+        <div class="group-header">
+          <label for="bg-color-picker">สีพื้นหลัง (Background Color)</label>
+          <span id="bg-hex-value" class="hex-badge">#0f172a</span>
+        </div>
+        <div class="color-picker-row">
+          <div class="picker-wrapper">
+            <input type="color" id="bg-color-picker" value="#0f172a" title="เลือกสีพื้นหลังตามใจชอบ">
+          </div>
+          <!-- Quick Color Presets -->
+          <div class="palette-presets" id="bg-presets">
+            <button type="button" class="preset-btn" data-color="#000000" style="background:#000000;" title="ดำสนิท"></button>
+            <button type="button" class="preset-btn" data-color="#0f172a" style="background:#0f172a;" title="น้ำเงินเข้มเนวี่"></button>
+            <button type="button" class="preset-btn" data-color="#18181b" style="background:#18181b;" title="เทาเข้มชาร์โคล"></button>
+            <button type="button" class="preset-btn" data-color="#2563eb" style="background:#2563eb;" title="น้ำเงินรอยัล"></button>
+            <button type="button" class="preset-btn" data-color="#059669" style="background:#059669;" title="เขียวมรกต"></button>
+            <button type="button" class="preset-btn" data-color="#d97706" style="background:#d97706;" title="ส้มอำพัน"></button>
+            <button type="button" class="preset-btn" data-color="#dc2626" style="background:#dc2626;" title="แดงสดใส"></button>
+            <button type="button" class="preset-btn" data-color="#7c3aed" style="background:#7c3aed;" title="ม่วงไวโอเล็ต"></button>
+            <button type="button" class="preset-btn" data-color="#f8fafc" style="background:#f8fafc;" title="ขาวสว่าง"></button>
+            <button type="button" class="preset-btn" data-color="#fef3c7" style="background:#fef3c7;" title="ครีมอุ่น"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Text & Size Controls -->
+      <div class="control-group">
+        <div class="group-header">
+          <label for="font-size-slider">ขนาดตัวอักษร (Font Size)</label>
+          <span id="font-size-value" class="size-badge">72px</span>
+        </div>
+        <div class="slider-wrapper">
+          <button id="btn-size-down" class="btn-step" title="ลดขนาด" aria-label="ลดขนาด">-</button>
+          <input type="range" id="font-size-slider" min="16" max="240" value="72" step="2">
+          <button id="btn-size-up" class="btn-step" title="เพิ่มขนาด" aria-label="เพิ่มขนาด">+</button>
+        </div>
+        <div class="quick-sizes">
+          <button type="button" class="quick-size-btn" data-size="36">S (36px)</button>
+          <button type="button" class="quick-size-btn" data-size="72">M (72px)</button>
+          <button type="button" class="quick-size-btn" data-size="120">L (120px)</button>
+          <button type="button" class="quick-size-btn" data-size="180">XL (180px)</button>
+        </div>
+      </div>
+
+      <!-- Section: Text Color & Auto Contrast -->
+      <div class="control-group">
+        <div class="group-header">
+          <label for="text-color-picker">สีข้อความ (Text Color)</label>
+          <label class="toggle-switch" title="ปรับสีข้อความอัตโนมัติตามพื้นหลัง">
+            <input type="checkbox" id="toggle-auto-contrast" checked>
+            <span class="toggle-slider"></span>
+            <span class="toggle-label">ปรับอัตโนมัติ</span>
+          </label>
+        </div>
+        <div class="color-picker-row">
+          <div class="picker-wrapper">
+            <input type="color" id="text-color-picker" value="#ffffff" title="เลือกสีข้อความ">
+          </div>
+          <div class="palette-presets" id="text-presets">
+            <button type="button" class="preset-btn text-preset" data-color="#ffffff" style="background:#ffffff;" title="ขาว"></button>
+            <button type="button" class="preset-btn text-preset" data-color="#000000" style="background:#000000;" title="ดำ"></button>
+            <button type="button" class="preset-btn text-preset" data-color="#facc15" style="background:#facc15;" title="เหลืองสดใส"></button>
+            <button type="button" class="preset-btn text-preset" data-color="#38bdf8" style="background:#38bdf8;" title="ฟ้าสว่าง"></button>
+            <button type="button" class="preset-btn text-preset" data-color="#4ade80" style="background:#4ade80;" title="เขียวนีออน"></button>
+            <button type="button" class="preset-btn text-preset" data-color="#f43f5e" style="background:#f43f5e;" title="ชมพูสว่าง"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Font Family & Style -->
+      <div class="control-row-grid">
+        <div class="control-group-half">
+          <label for="font-family-select">แบบอักษร (Font)</label>
+          <select id="font-family-select">
+            <option value="'Kanit', sans-serif" selected>Kanit (คานิท)</option>
+            <option value="'Prompt', sans-serif">Prompt (พร้อมท์)</option>
+            <option value="'Inter', sans-serif">Inter (อินเตอร์)</option>
+            <option value="'Sarabun', sans-serif">Sarabun (สารบรรณ)</option>
+            <option value="'Chakra Petch', sans-serif">Chakra Petch (โมเดิร์น)</option>
+            <option value="'Noto Serif Thai', serif">Noto Serif (ทางการ/หรูหรา)</option>
+          </select>
+        </div>
+
+        <div class="control-group-half">
+          <label for="font-weight-select">ความหนา (Weight)</label>
+          <select id="font-weight-select">
+            <option value="300">บาง (Light)</option>
+            <option value="400">ปกติ (Regular)</option>
+            <option value="600" selected>หนาปานกลาง (Semi-Bold)</option>
+            <option value="800">หนามาก (Bold)</option>
+            <option value="900">หนาสุด (Black)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Alignment Controls -->
+      <div class="control-row-grid">
+        <div class="control-group-half">
+          <label>การจัดแนวนอน (Horizontal)</label>
+          <div class="segmented-control" id="align-control">
+            <button type="button" class="segment-btn" data-align="left" title="ชิดซ้าย">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="6" x2="3" y2="6"></line><line x1="15" y1="12" x2="3" y2="12"></line><line x1="17" y1="18" x2="3" y2="18"></line></svg>
+            </button>
+            <button type="button" class="segment-btn active" data-align="center" title="กึ่งกลาง">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="6" x2="3" y2="6"></line><line x1="17" y1="12" x2="7" y2="12"></line><line x1="19" y1="18" x2="5" y2="18"></line></svg>
+            </button>
+            <button type="button" class="segment-btn" data-align="right" title="ชิดขวา">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="12" x2="9" y2="12"></line><line x1="21" y1="18" x2="7" y2="18"></line></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="control-group-half">
+          <label>การจัดแนวตั้ง (Vertical)</label>
+          <div class="segmented-control" id="valign-control">
+            <button type="button" class="vsegment-btn active" data-valign="center" title="กึ่งกลางหน้าจอ">
+              กึ่งกลาง
+            </button>
+            <button type="button" class="vsegment-btn" data-valign="top" title="ชิดขอบบน (เหมาะสำหรับข้อความยาว)">
+              ชิดบน
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Text Input Field & Markdown Toggle -->
+      <div class="control-group">
+        <div class="group-header">
+          <label for="text-input-field">พิมพ์หรือวางข้อความตรงนี้ (รองรับตาราง & หัวข้อย่อย)</label>
+          <label class="toggle-switch" title="เปิด/ปิดการจัดรูปแบบ Markdown, ตาราง และหัวข้อย่อย">
+            <input type="checkbox" id="toggle-markdown" checked>
+            <span class="toggle-slider"></span>
+            <span class="toggle-label">โหมดตาราง & Markdown</span>
+          </label>
+        </div>
+        <textarea id="text-input-field" rows="3" placeholder="วางข้อความ, สรุปย่อ, ตารางเปรียบเทียบ, หรือหัวข้อย่อยที่นี่..."></textarea>
+      </div>
+    </div>
+
+    <!-- Quick Tip Footer -->
+    <div class="panel-footer">
+      <span>💡 รองรับทั้งตาราง, จุดวงกลมย่อย (○), ขีด (-), และ Markdown อัตโนมัติ | กด <b>H</b> ซ่อนเมนู</span>
+    </div>
+  </header>
+
+  <!-- Markdown Parser Library (marked) with graceful fallback -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

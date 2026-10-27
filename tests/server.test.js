@@ -433,3 +433,25 @@ test('getSanitizedRoomState strips all evaluation metadata from unrevealed oppon
   assert.equal(dhBj.label, undefined);
 });
 
+test('GET / serves the Underground Party Casino UI and /display.html preserves original display utility', async () => {
+  const { httpServer } = createCasinoServer();
+  await new Promise(resolve => httpServer.listen(0, resolve));
+  const port = httpServer.address().port;
+
+  try {
+    const res = await fetch(`http://localhost:${port}/`);
+    assert.equal(res.status, 200);
+    const body = await res.text();
+    assert.ok(body.includes('คาสิโนเถื่อน'));
+    assert.ok(body.includes('admin-panel-modal'));
+
+    const displayRes = await fetch(`http://localhost:${port}/display.html`);
+    assert.equal(displayRes.status, 200);
+    const displayBody = await displayRes.text();
+    assert.ok(displayBody.includes('Solid Screen & Text Display'));
+  } finally {
+    httpServer.close();
+  }
+});
+
+
