@@ -7,28 +7,28 @@
    ========================================================================== */
 
 :root {
-  --bg-obsidian: #070a12;
-  --bg-velvet: #0d111c;
-  --bg-smoked-glass: rgba(13, 17, 28, 0.78);
+  --bg-obsidian: #080406;
+  --bg-velvet: #120609;
+  --bg-smoked-glass: rgba(14, 6, 9, 0.84);
   --bg-smoked-Write: rgba(13, 17, 28, 0.88);
 
-  --felt-center: #065f46;
-  --felt-mid: #054433;
-  --felt-rim: #022c22;
+  --felt-center: #7f1d1d;
+  --felt-mid: #450a0a;
+  --felt-rim: #160305;
 
-  --neon-gold: #d97706;
-  --neon-gold-bright: #fbbf24;
-  --gold-foil: rgba(251, 191, 36, 0.36);
+  --neon-gold: #e11d48;
+  --neon-gold-bright: #fb7185;
+  --gold-foil: rgba(244, 63, 94, 0.42);
   --gold-foil- soft: rgba(251, 191, 36, 0.16);
   --neon-crimson: #e11d48;
-  --neon-emerald: #10b981;
+  --neon-emerald: #e11d48;
   --neon-cyan: #06b6d4;
 
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --border-subtle: rgba(255, 255, 255, 0.1);
-  --border-gold: rgba(251, 191, 36, 0.38);
-  --inner-top-highlight: inset 0 1px 0 rgba(251, 191, 36, 0.26);
+  --border-gold: rgba(225, 29, 72, 0.52);
+  --inner-top-highlight: inset 0 1px 0 rgba(244, 63, 94, 0.34);
   --inner-top-white: inset 0 1px 0 rgba(255, 255, 255, 0.14);
 
   --card-white: #fdfcfb;
@@ -207,9 +207,9 @@ p, .modal-desc, .table-status-banner {
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 10%, rgba(251, 191, 36, 0.16), transparent 52%),
-    radial-gradient(circle at 85% 85%, rgba(225, 29, 72, 0.12), transparent 50%),
-    radial-gradient(circle at 15% 80%, rgba(6, 95, 70, 0.32), transparent 55%),
+    radial-gradient(circle at 50% 12%, rgba(220, 38, 38, 0.26), transparent 55%),
+    radial-gradient(circle at 85% 85%, rgba(153, 27, 27, 0.24), transparent 52%),
+    radial-gradient(circle at 15% 80%, rgba(69, 10, 10, 0.45), transparent 55%),
     var(--bg-obsidian);
 }
 
@@ -245,7 +245,7 @@ p, .modal-desc, .table-status-banner {
 .lobby-title {
   font-size: 2.1rem;
   font-weight: 900;
-  background: linear-gradient(180deg, #fffbeb 0%, #fde68a 45%, #d97706 100%);
+  background: linear-gradient(180deg, #fff1f2 0%, #fb7185 45%, #e11d48 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -322,7 +322,7 @@ p, .modal-desc, .table-status-banner {
 }
 
 .lobby-tab.active {
-  background: linear-gradient(180deg, rgba(251, 191, 36, 0.22), rgba(180, 83, 9, 0.28));
+  background: linear-gradient(180deg, rgba(225, 29, 72, 0.32), rgba(136, 19, 55, 0.42));
   color: var(--neon-gold-bright);
   border-color: var(--border-gold);
   box-shadow: var(--inner-top-highlight);
@@ -393,24 +393,24 @@ p, .modal-desc, .table-status-banner {
 }
 
 .btn-primary {
-  background: linear-gradient(180deg, #10b981 0%, #047857 100%);
+  background: linear-gradient(180deg, #e11d48 0%, #9f1239 100%);
   color: #ffffff;
-  border-color: rgba(52, 211, 153, 0.45);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 6px 18px -4px rgba(16, 185, 129, 0.45);
+  border-color: rgba(251, 113, 133, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 6px 18px -4px rgba(225, 29, 72, 0.5);
 }
 
 .btn-gold {
-  background: linear-gradient(180deg, #fcd34d 0%, #d97706 100%);
-  color: #090d16;
-  border-color: #fde68a;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 6px 20px -4px rgba(245, 158, 11, 0.45);
+  background: linear-gradient(180deg, #f43f5e 0%, #9f1239 100%);
+  color: #ffffff;
+  border-color: #fda4af;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 6px 20px -4px rgba(225, 29, 72, 0.55);
 }
 
 .btn-crimson {
-  background: linear-gradient(180deg, #f43f5e 0%, #be123c 100%);
-  color: #ffffff;
-  border-color: rgba(251, 113, 133, 0.48);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 6px 18px -4px rgba(225, 29, 72, 0.45);
+  background: linear-gradient(180deg, #1f090d 0%, #090305 100%);
+  color: #fb7185;
+  border-color: rgba(244, 63, 94, 0.65);
+  box-shadow: inset 0 1px 0 rgba(244, 63, 94, 0.28), 0 6px 18px -4px rgba(0, 0, 0, 0.8);
 }
 
 .btn-emerald {
@@ -442,7 +442,7 @@ p, .modal-desc, .table-status-banner {
   display: flex;
   flex-direction: column;
   background:
-    radial-gradient(circle at 50% 0%, rgba(251, 191, 36, 0.08), transparent 45%),
+    radial-gradient(circle at 50% 0%, rgba(225, 29, 72, 0.16), transparent 48%),
     var(--bg-obsidian);
   overflow: hidden;
 }
@@ -456,7 +456,7 @@ p, .modal-desc, .table-status-banner {
   background: var(--bg-smoked-glass);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(251, 191, 36, 0.22);
+  border-bottom: 1px solid rgba(225, 29, 72, 0.35);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.65);
   z-index: var(--z-hud);
   flex-shrink: 0;
@@ -497,9 +497,9 @@ p, .modal-desc, .table-status-banner {
 }
 
 .game-badge {
-  background: rgba(6, 78, 59, 0.55);
-  border-color: rgba(16, 185, 129, 0.42);
-  color: #a7f3d0;
+  background: rgba(127, 29, 29, 0.55);
+  border-color: rgba(244, 63, 94, 0.5);
+  color: #fecdd3;
   font-weight: 600;
 }
 
@@ -548,10 +548,10 @@ p, .modal-desc, .table-status-banner {
 }
 
 .hud-admin-btn {
-  background: linear-gradient(180deg, #fcd34d 0%, #d97706 100%);
-  color: #090d16;
-  border: 1px solid #fde68a;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 2px 10px rgba(245, 158, 11, 0.35);
+  background: linear-gradient(180deg, #e11d48 0%, #881337 100%);
+  color: #ffffff;
+  border: 1px solid #fda4af;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 10px rgba(225, 29, 72, 0.45);
   border-radius: 999px;
   padding: 0.35rem 0.78rem;
   font-family: var(--font-thai);
@@ -593,11 +593,11 @@ p, .modal-desc, .table-status-banner {
     ),
     radial-gradient(ellipse at 50% 42%, var(--felt-center) 0%, var(--felt-mid) 56%, var(--felt-rim) 100%);
   /* 3D Padded Dark Leather Armrest/Rail with brass inner rim */
-  border: 9px solid #1a120e;
+  border: 9px solid #0d0608;
   box-shadow:
-    inset 0 0 0 1.5px rgba(251, 191, 36, 0.42),
+    inset 0 0 0 1.5px rgba(244, 63, 94, 0.48),
     inset 0 10px 28px rgba(0, 0, 0, 0.75),
-    inset 0 0 65px rgba(1, 18, 14, 0.88),
+    inset 0 0 70px rgba(10, 2, 4, 0.92),
     0 0 0 1px rgba(255, 255, 255, 0.08),
     0 0 0 3px #0c0908,
     0 16px 38px rgba(0, 0, 0, 0.85);
@@ -641,9 +641,9 @@ p, .modal-desc, .table-status-banner {
 
 /* Gold Betting Ring Guideline */
 .gold-betting-ring {
-  border: 1px dashed rgba(251, 191, 36, 0.34);
+  border: 1px dashed rgba(244, 63, 94, 0.42);
   border-radius: 16px;
-  background: radial-gradient(ellipse at center, rgba(6, 95, 70, 0.28), rgba(2, 44, 34, 0.45));
+  background: radial-gradient(ellipse at center, rgba(127, 29, 29, 0.32), rgba(18, 4, 7, 0.65));
   box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.42), 0 1px 0 rgba(251, 191, 36, 0.14);
   padding: 0.4rem 0.6rem;
 }
@@ -652,10 +652,10 @@ p, .modal-desc, .table-status-banner {
 .dealer-community-zone {
   position: relative;
   z-index: var(--z-stage);
-  background: rgba(9, 14, 24, 0.62);
+  background: rgba(12, 5, 8, 0.72);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(251, 191, 36, 0.28);
+  border: 1px solid rgba(225, 29, 72, 0.38);
   box-shadow: var(--inner-top-highlight), inset 0 4px 16px rgba(0, 0, 0, 0.45), 0 6px 18px rgba(0, 0, 0, 0.4);
   border-radius: 20px;
   padding: 0.6rem 0.85rem;
@@ -714,10 +714,10 @@ p, .modal-desc, .table-status-banner {
 }
 
 .seat-card {
-  background: rgba(11, 16, 27, 0.76);
+  background: rgba(12, 5, 8, 0.82);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(251, 191, 36, 0.22);
+  border: 1px solid rgba(225, 29, 72, 0.28);
   box-shadow: var(--inner-top-white), 0 8px 20px -6px rgba(0, 0, 0, 0.65);
   border-radius: 16px;
   padding: 0.55rem 0.65rem;
@@ -928,10 +928,10 @@ p, .modal-desc, .table-status-banner {
       transparent 7px
     ),
     linear-gradient(145deg, #3b0712 0%, #1e050a 55%, #0f172a 100%);
-  border: 1.5px solid #fbbf24;
+  border: 1.5px solid #f43f5e;
   box-shadow:
     inset 0 0 0 3px rgba(15, 23, 42, 0.85),
-    inset 0 0 0 4px rgba(251, 191, 36, 0.45),
+    inset 0 0 0 4px rgba(244, 63, 94, 0.45),
     0 6px 14px -2px rgba(0, 0, 0, 0.7);
   color: var(--neon-gold-bright);
   align-items: center;
@@ -1008,7 +1008,7 @@ p, .modal-desc, .table-status-banner {
   background: var(--bg-smoked-glass);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-top: 1px solid rgba(251, 191, 36, 0.34);
+  border-top: 1px solid rgba(225, 29, 72, 0.42);
   box-shadow: var(--inner-top-highlight), 0 -10px 30px rgba(0, 0, 0, 0.72);
   padding: 0.55rem max(0.75rem, env(safe-area-inset-right, 0px)) calc(0.75rem + env(safe-area-inset-bottom, 0px)) max(0.75rem, env(safe-area-inset-left, 0px));
   display: flex;
@@ -1045,8 +1045,8 @@ p, .modal-desc, .table-status-banner {
 }
 
 .role-pill {
-  background: linear-gradient(180deg, #fcd34d 0%, #d97706 100%);
-  color: #090d16;
+  background: linear-gradient(180deg, #f43f5e 0%, #9f1239 100%);
+  color: #ffffff;
   font-size: 0.72rem;
   font-weight: 800;
   padding: 0.12rem 0.52rem;
@@ -1127,18 +1127,18 @@ p, .modal-desc, .table-status-banner {
   flex: 1 1 58px;
 }
 
-/* Authentic Casino Striped Edge 3D Stacked Chip Button */
+/* Authentic Red & Black Casino Striped Edge 3D Stacked Chip Button */
 .chip-btn {
   position: relative;
   background:
-    radial-gradient(circle at 50% 45%, #fde68a 0%, #f59e0b 64%, #b45309 66%, transparent 68%),
+    radial-gradient(circle at 50% 45%, #18090c 0%, #0d0507 64%, #881337 66%, transparent 68%),
     repeating-conic-gradient(
       from 0deg,
-      #d97706 0deg 18deg,
-      #fffbeb 18deg 30deg
+      #e11d48 0deg 18deg,
+      #11070a 18deg 30deg
     );
-  border: 1px solid #fef3c7;
-  color: #090d16;
+  border: 1px solid rgba(251, 113, 133, 0.65);
+  color: #fff1f2;
   font-family: var(--font-num);
   font-weight: 800;
   font-size: 0.82rem;
@@ -1146,10 +1146,10 @@ p, .modal-desc, .table-status-banner {
   border-radius: 999px;
   cursor: pointer;
   box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.75),
-    inset 0 0 0 3px rgba(120, 53, 15, 0.35),
-    0 3px 0 #92400e,
-    0 5px 10px rgba(0, 0, 0, 0.6);
+    inset 0 1px 1px rgba(251, 113, 133, 0.4),
+    inset 0 0 0 3px rgba(225, 29, 72, 0.28),
+    0 3px 0 #4c0519,
+    0 5px 10px rgba(0, 0, 0, 0.75);
   transition: transform 150ms ease-out, box-shadow 150ms ease-out, filter 150ms ease-out;
 }
 
@@ -1412,10 +1412,10 @@ p, .modal-desc, .table-status-banner {
 }
 
 .btn-game-switch.active {
-  background: rgba(16, 185, 129, 0.24);
-  border-color: var(--neon-emerald);
-  color: #6ee7b7;
-  box-shadow: inset 0 1px 0 rgba(110, 231, 183, 0.3), 0 0 14px rgba(16, 185, 129, 0.2);
+  background: rgba(225, 29, 72, 0.28);
+  border-color: #f43f5e;
+  color: #fecdd3;
+  box-shadow: inset 0 1px 0 rgba(251, 113, 133, 0.35), 0 0 14px rgba(225, 29, 72, 0.28);
 }
 
 .payout-subbox h4 {
